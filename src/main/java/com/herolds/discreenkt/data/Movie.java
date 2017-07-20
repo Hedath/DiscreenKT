@@ -6,6 +6,7 @@ package com.herolds.discreenkt.data;
  */
 public class Movie {
 
+    private int KTid;
     private String title;
     private String secondaryTitle;
     private String link;
@@ -13,10 +14,19 @@ public class Movie {
     public Movie() {
     }
 
-    public Movie(String title, String secondaryTitle, String link) {
+    public Movie(int KTid, String title, String secondaryTitle, String link) {
+        this.KTid = KTid;
         this.title = title;
         this.secondaryTitle = secondaryTitle;
         this.link = link;
+    }
+
+    public int getKTid() {
+        return KTid;
+    }
+
+    public void setKTid(int KTid) {
+        this.KTid = KTid;
     }
 
     public String getTitle() {

@@ -11,6 +11,7 @@ public class ConfigProvider {
     private final String DAGNEROSS_URL = "12086/dagneross";
     private final String API_KEY = "41a3fcf848f1ed1af18b18e5020d7f5b";
     private final String POSTER_BASE_URL = "https://image.tmdb.org/t/p/w500";
+    private final String OUTPUT_PATH = "/Users/herold/Desktop";
 
     private static ConfigProvider instance;
 
@@ -37,6 +38,10 @@ public class ConfigProvider {
 
     public String getPosterBaseUrl() {
         return POSTER_BASE_URL;
+    }
+
+    public String getOutputPath() {
+        return OUTPUT_PATH;
     }
 
     public String formatSiteUrl() {
