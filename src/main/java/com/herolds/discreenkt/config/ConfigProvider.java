@@ -10,8 +10,8 @@ public class ConfigProvider {
     private final String KT_URL = "https://kritikustomeg.org/user/{0}/filmek/?o=-other_rating_when";
     private final String DAGNEROSS_URL = "12086/dagneross";
     private final String API_KEY = "41a3fcf848f1ed1af18b18e5020d7f5b";
-    private final String POSTER_BASE_URL = "https://image.tmdb.org/t/p/w500";
-    private final String OUTPUT_PATH = "/Users/herold/Desktop";
+    private final String POSTER_BASE_URL = "https://image.tmdb.org/t/p/w500/";
+    private final String OUTPUT_PATH = "/Users/herold/Desktop/";
 
     private static ConfigProvider instance;
 

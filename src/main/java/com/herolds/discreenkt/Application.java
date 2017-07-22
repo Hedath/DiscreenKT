@@ -20,7 +20,7 @@ public class Application {
 
         try {
             List<Movie> movies = movieListParser.getMovieLinks(ConfigProvider.getInstance().formatSiteUrl());
-            movies.forEach(Application::printMovie);
+//            movies.forEach(Application::printMovie);
 
             moviePosterManager.processMovieList(movies);
         } catch (IOException e) {
@@ -29,6 +29,10 @@ public class Application {
     }
 
     private static void printMovie(Movie movie) {
-        System.out.println(movie.getTitle() + "\t" + movie.getSecondaryTitle() + "\t" + movie.getLink());
+        System.out.println(movie.getKTid() + "\t" +
+                movie.getTitle() + "\t" +
+                movie.getSecondaryTitle() + "\t" +
+                movie.getLink() + "\t" +
+                movie.getYear());
     }
 }

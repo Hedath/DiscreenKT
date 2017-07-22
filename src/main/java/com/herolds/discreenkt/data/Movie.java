@@ -10,15 +10,17 @@ public class Movie {
     private String title;
     private String secondaryTitle;
     private String link;
+    private int year;
 
     public Movie() {
     }
 
-    public Movie(int KTid, String title, String secondaryTitle, String link) {
+    public Movie(int KTid, String title, String secondaryTitle, String link, int year) {
         this.KTid = KTid;
         this.title = title;
         this.secondaryTitle = secondaryTitle;
         this.link = link;
+        this.year = year;
     }
 
     public int getKTid() {
@@ -51,5 +53,13 @@ public class Movie {
 
     public void setLink(String link) {
         this.link = link;
+    }
+
+    public int getYear() {
+        return year;
+    }
+
+    public void setYear(int year) {
+        this.year = year;
     }
 }

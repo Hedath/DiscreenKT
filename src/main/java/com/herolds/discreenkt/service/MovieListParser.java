@@ -1,6 +1,7 @@
 package com.herolds.discreenkt.service;
 
 import com.herolds.discreenkt.data.Movie;
+import com.herolds.discreenkt.data.MovieFactory;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
@@ -49,7 +50,7 @@ public class MovieListParser {
             secondaryTitle = firstSpan.text();
         }
 
-        return Optional.of(new Movie(title, secondaryTitle, movieLink));
+        return Optional.of(MovieFactory.create(title, secondaryTitle, movieLink));
     }
 
     private boolean isEmpty(String s) {
