@@ -1,10 +1,12 @@
 package com.herolds.discreenkt.data;
 
+import java.io.Serializable;
+
 /**
  * Movie entity for kritikustomeg movies.
  * Created by Benedek Herold on 2017.07.16.
  */
-public class Movie {
+public class Movie implements Serializable {
 
     private int KTid;
     private String title;

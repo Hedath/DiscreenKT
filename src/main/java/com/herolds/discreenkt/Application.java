@@ -2,11 +2,11 @@ package com.herolds.discreenkt;
 
 import com.herolds.discreenkt.config.ConfigProvider;
 import com.herolds.discreenkt.data.Movie;
+import com.herolds.discreenkt.service.MovieCache;
 import com.herolds.discreenkt.service.MovieListParser;
 import com.herolds.discreenkt.service.MoviePosterManager;
 import com.omertron.themoviedbapi.MovieDbException;
 
-import java.io.IOException;
 import java.util.List;
 
 /**
@@ -15,16 +15,17 @@ import java.util.List;
  */
 public class Application {
     public static void main(String[] args) throws MovieDbException {
-        MovieListParser movieListParser = new MovieListParser();
-        MoviePosterManager moviePosterManager = new MoviePosterManager();
-
         try {
+            MovieListParser movieListParser = new MovieListParser();
             List<Movie> movies = movieListParser.getMovieLinks(ConfigProvider.getInstance().formatSiteUrl());
 //            movies.forEach(Application::printMovie);
 
+            MoviePosterManager moviePosterManager = new MoviePosterManager();
             moviePosterManager.processMovieList(movies);
-        } catch (IOException e) {
+        } catch (Exception e) {
             e.printStackTrace();
+        } finally {
+            MovieCache.getInstance().close();
         }
     }
 

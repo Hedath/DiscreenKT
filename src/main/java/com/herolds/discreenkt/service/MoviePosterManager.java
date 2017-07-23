@@ -27,23 +27,47 @@ import java.util.List;
  */
 public class MoviePosterManager {
     private TmdbSearch tmdbSearch;
+    private MovieCache movieCache;
 
     public MoviePosterManager() {
         String apiKey = ConfigProvider.getInstance().getApiKey();
         HttpClient httpClient = HttpClientBuilder.create().build();
         this.tmdbSearch = new TmdbSearch(apiKey, new HttpTools(httpClient));
+
+        movieCache = MovieCache.getInstance();
     }
 
     public void processMovieList(List<Movie> movies) {
         movies.stream()
                 .filter(this::isPosterNeeded)
-                .map(this::getMovieInfo)
                 .forEach(this::downloadPoster);
     }
 
     private boolean isPosterNeeded(Movie movie) {
-        // TODO: implement caching
-        return true;
+        return !movieCache.containsMovie(movie);
+    }
+
+    private void downloadPoster(Movie movie) {
+        MovieInfo movieInfo = getMovieInfo(movie);
+
+        if (movieInfo != null && movieInfo.getPosterPath() != null) {
+            ConfigProvider configProvider = ConfigProvider.getInstance();
+            String baseUrl = configProvider.getPosterBaseUrl();
+            String outputPath = configProvider.getOutputPath();
+
+            String posterFileName = movieInfo.getPosterPath().substring(1);
+
+            String posterUrl = baseUrl + posterFileName;
+
+            try (InputStream in = new URL(posterUrl).openStream()) {
+                Files.copy(in, Paths.get(outputPath + posterFileName), StandardCopyOption.REPLACE_EXISTING);
+                movieCache.putMovie(movie);
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        } else {
+            // TODO: Gather somewhere those movies for which it couldn't find a poster
+        }
     }
 
     private MovieInfo getMovieInfo(Movie movie) {
@@ -73,25 +97,6 @@ public class MoviePosterManager {
             System.out.println("\t\t Title: " + movieInfo.getTitle());
             System.out.println("\t\t Release: " + movieInfo.getReleaseDate());
             System.out.println("\t\t PosterPath: " + movieInfo.getPosterPath());
-        }
-    }
-
-    private void downloadPoster(MovieInfo movieInfo) {
-        if (movieInfo != null && movieInfo.getPosterPath() != null) {
-            String baseUrl = ConfigProvider.getInstance().getPosterBaseUrl();
-            String outputPath = ConfigProvider.getInstance().getOutputPath();
-
-            String posterFileName = movieInfo.getPosterPath().substring(1);
-
-            String posterUrl = baseUrl + posterFileName;
-
-            try (InputStream in = new URL(posterUrl).openStream()) {
-                Files.copy(in, Paths.get(outputPath + posterFileName), StandardCopyOption.REPLACE_EXISTING);
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
-        } else {
-            // TODO: Gather somewhere those movies for which it couldn't find a poster
         }
     }
 }
