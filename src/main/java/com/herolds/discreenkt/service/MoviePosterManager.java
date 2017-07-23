@@ -30,7 +30,7 @@ public class MoviePosterManager {
     private MovieCache movieCache;
 
     public MoviePosterManager() {
-        String apiKey = ConfigProvider.getInstance().getApiKey();
+        String apiKey = ConfigProvider.getInstance().getMovieDBApiKey();
         HttpClient httpClient = HttpClientBuilder.create().build();
         this.tmdbSearch = new TmdbSearch(apiKey, new HttpTools(httpClient));
 
@@ -52,15 +52,15 @@ public class MoviePosterManager {
 
         if (movieInfo != null && movieInfo.getPosterPath() != null) {
             ConfigProvider configProvider = ConfigProvider.getInstance();
-            String baseUrl = configProvider.getPosterBaseUrl();
-            String outputPath = configProvider.getOutputPath();
+            String baseUrl = configProvider.getMovieDBPosterBaseUrl();
+            String outputPath = configProvider.getPosterDownloadFolder();
 
-            String posterFileName = movieInfo.getPosterPath().substring(1);
+            String posterFileName = movieInfo.getPosterPath();
 
             String posterUrl = baseUrl + posterFileName;
 
             try (InputStream in = new URL(posterUrl).openStream()) {
-                Files.copy(in, Paths.get(outputPath + posterFileName), StandardCopyOption.REPLACE_EXISTING);
+                Files.copy(in, Paths.get(outputPath, posterFileName), StandardCopyOption.REPLACE_EXISTING);
                 movieCache.putMovie(movie);
             } catch (IOException e) {
                 e.printStackTrace();

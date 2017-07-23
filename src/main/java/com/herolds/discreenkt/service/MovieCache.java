@@ -32,7 +32,7 @@ public class MovieCache {
     }
 
     private void initEhCache() {
-        String cacheLocation = ConfigProvider.getInstance().getCacheLocation();
+        String cacheLocation = ConfigProvider.getInstance().getMovieCacheFolder();
 
         persistentCacheManager = CacheManagerBuilder.newCacheManagerBuilder()
                 .with(CacheManagerBuilder.persistence(cacheLocation))
