@@ -100,17 +100,9 @@ public class Main extends Application {
 
         Scene scene = new Scene(root, 300, 275);
 
-        stage.setTitle("FXML Welcome");
+        stage.setTitle("DiscreenKT");
         stage.setScene(scene);
         stage.show();
-
-        //Label hello = new Label("hello, world");
-        //hello.setStyle("-fx-font-size: 40px; -fx-text-fill: forestgreen;");
-        //Label instructions = new Label("(click to hide)");
-        //instructions.setStyle("-fx-font-size: 12px; -fx-text-fill: orange;");
-
-        //VBox content = new VBox(10, hello, instructions);
-        //content.setAlignment(Pos.CENTER);
 
         return root;
     }
@@ -142,7 +134,7 @@ public class Main extends Application {
 
             // if the user selects the default menu item (which includes the app name),
             // show the main app stage.
-            java.awt.MenuItem openItem = new java.awt.MenuItem("hello, world");
+            java.awt.MenuItem openItem = new java.awt.MenuItem("Settings");
             openItem.addActionListener(event -> Platform.runLater(this::showStage));
 
             // the convention for tray icons seems to be to set the default icon for opening
