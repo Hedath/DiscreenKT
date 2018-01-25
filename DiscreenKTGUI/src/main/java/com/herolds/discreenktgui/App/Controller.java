@@ -1,30 +1,32 @@
 package com.herolds.discreenktgui.App;
 
 import com.herolds.discreenktgui.validators.PathValidator;
+import javafx.beans.binding.Bindings;
+import javafx.beans.binding.BooleanBinding;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.scene.control.Button;
 import javafx.scene.control.TextField;
 import javafx.stage.DirectoryChooser;
 import org.controlsfx.validation.ValidationSupport;
-import org.controlsfx.validation.Validator;
-
-import javax.xml.soap.Text;
 import java.io.File;
 
 public class Controller {
 
     @FXML
     public Button cachePathButton;
-
     @FXML
     public TextField cachePathTextField;
-
     @FXML
     public Button posterPathButton;
-
     @FXML
     public TextField posterPathTextField;
+    @FXML
+    public Button saveButton;
+    @FXML
+    public Button startButton;
+    @FXML
+    public Button resetButton;
 
 
     @FXML
@@ -48,7 +50,7 @@ public class Controller {
     }
 
     @FXML
-    public void resetConfig(ActionEvent actionEvent) {
+    public void undoConfig(ActionEvent actionEvent) {
 
     }
 
@@ -64,7 +66,16 @@ public class Controller {
     protected void setupValidations() {
         ValidationSupport support = new ValidationSupport();
 
-        Validator<String> pathValidator = new PathValidator();
+        PathValidator pathValidator = new PathValidator();
+
+        BooleanBinding cachePathTextFieldValid = Bindings.createBooleanBinding(() -> pathValidator.validate(cachePathTextField.getText()), cachePathTextField.textProperty());
+        BooleanBinding posterPathTextFieldValid = Bindings.createBooleanBinding(() -> pathValidator.validate(posterPathTextField.getText()), posterPathTextField.textProperty());
+
+        final BooleanBinding validPathsBooleanBinding = cachePathTextFieldValid.or(posterPathTextFieldValid);
+
+        saveButton.disableProperty().bind(validPathsBooleanBinding);
+        startButton.disableProperty().bind(validPathsBooleanBinding);
+        resetButton.disableProperty().bind(validPathsBooleanBinding);
 
         support.registerValidator(cachePathTextField, true, pathValidator);
         support.registerValidator(posterPathTextField, true, pathValidator);

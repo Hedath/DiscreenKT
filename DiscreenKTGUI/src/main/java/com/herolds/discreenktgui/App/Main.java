@@ -67,16 +67,18 @@ public class Main extends Application {
                 "-fx-background-color: rgba(255, 255, 255, 1);"
         );
 
-        layout.setPrefSize(300, 200);
+        layout.setPrefSize(400, 200);
+
 
         // this dummy app just hides itself when the app screen is clicked.
         // a real app might have some interactive UI and a separate icon which hides the app window.
-        layout.setOnMouseClicked(event -> stage.hide());
+        // layout.setOnMouseClicked(event -> stage.hide());
 
         // a scene with a transparent fill is necessary to implement the translucent app window.
         Scene scene = new Scene(layout);
-        scene.setFill(Color.TRANSPARENT);
+        //scene.setFill(Color.TRANSPARENT);
 
+        stage.setResizable(false);
         stage.setScene(scene);
     }
 

@@ -17,13 +17,17 @@ public class PathValidator implements Validator<String> {
     public ValidationResult apply(Control control, String value) {
         boolean condition = false;
 
-        if (value == null) {
-            condition = true;
-        } else {
-            File directory = new File(value);
-            condition = !directory.exists();
-        }
+        condition = validate(value);
 
         return ValidationResult.fromMessageIf( control, "Wrong file path!", Severity.ERROR, condition );
+    }
+
+    public boolean validate(String value) {
+        if (value == null) {
+            return true;
+        } else {
+            File directory = new File(value);
+            return  !directory.exists();
+        }
     }
 }
