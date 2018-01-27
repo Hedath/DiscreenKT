@@ -8,54 +8,72 @@
 <?import javafx.scene.control.Separator?>
 
 <?import javafx.scene.layout.HBox?>
-<GridPane
-        fx:controller="com.herolds.discreenktgui.App.Controller" xmlns:fx="http://javafx.com/fxml"
-        alignment="TOP_LEFT" hgap="10" vgap="10">
+<?import javafx.scene.control.TitledPane?>
+<?import javafx.scene.control.ComboBox?>
+<?import javafx.scene.layout.VBox?>
+
+<VBox
+        fx:controller="com.herolds.discreenktgui.controller.Controller" xmlns:fx="http://javafx.com/fxml"
+        alignment="CENTER" spacing="10">
 
     <padding><Insets top="25" right="25" bottom="25" left="25"/></padding>
 
-    <Label text="DiscreenKT Configuration" GridPane.rowIndex="0" GridPane.columnIndex="0" GridPane.columnSpan="4"></Label>
+    <Label text="DiscreenKT Configuration" />
 
-    <Separator GridPane.rowIndex="1" GridPane.columnIndex="0" GridPane.columnSpan="4"></Separator>
+    <Separator/>
 
-    <Label
-        GridPane.columnIndex="0" GridPane.rowIndex="2"
-        text="Posters">
-    </Label>
-    <TextField
-        fx:id="posterPathTextField"
-        GridPane.columnIndex="1" GridPane.rowIndex="2" GridPane.columnSpan="2"
-        promptText="/path/to/posters/">
-    </TextField>
 
-    <Button
-        fx:id="posterPathButton"
-        GridPane.columnIndex="3" GridPane.rowIndex="2" onAction="#selectPosterPath">
-        <graphic>
-            <Glyph fontFamily="FontAwesome" icon="search"/>
-        </graphic>
-    </Button>
+    <TitledPane text="Paths" >
+        <GridPane alignment="CENTER" hgap="10" vgap="10">
+            <Label
+                    GridPane.columnIndex="0" GridPane.rowIndex="0"
+                    text="Posters"/>
+            <TextField
+                    fx:id="posterPathTextField"
+                    GridPane.columnIndex="1" GridPane.rowIndex="0" GridPane.columnSpan="2"
+                    promptText="/path/to/posters/"/>
 
-    <Label
-        GridPane.columnIndex="0" GridPane.rowIndex="3"
-        text="Cache">
-    </Label>
-    <TextField
-        fx:id="cachePathTextField"
-        GridPane.columnIndex="1" GridPane.rowIndex="3" GridPane.columnSpan="2"
-        promptText="/path/to/posters/">
-    </TextField>
-    <Button
-        fx:id="cachePathButton"
-        GridPane.columnIndex="3" GridPane.rowIndex="3" onAction="#selectCachePath">
-        <graphic>
-            <Glyph fontFamily="FontAwesome" icon="search"/>
-        </graphic>
-    </Button>
+            <Button
+                    fx:id="posterPathButton"
+                    GridPane.columnIndex="3" GridPane.rowIndex="0" onAction="#selectPosterPath">
+                <graphic>
+                    <Glyph fontFamily="FontAwesome" icon="search"/>
+                </graphic>
+            </Button>
 
-    <Separator GridPane.rowIndex="4" GridPane.columnIndex="0" GridPane.columnSpan="4"></Separator>
+            <Label
+                    GridPane.columnIndex="0" GridPane.rowIndex="1"
+                    text="Cache"/>
+            <TextField
+                    fx:id="cachePathTextField"
+                    GridPane.columnIndex="1" GridPane.rowIndex="1" GridPane.columnSpan="2"
+                    promptText="/path/to/posters/"/>
+            <Button
+                    fx:id="cachePathButton"
+                    GridPane.columnIndex="3" GridPane.rowIndex="1" onAction="#selectCachePath">
+                <graphic>
+                    <Glyph fontFamily="FontAwesome" icon="search"/>
+                </graphic>
+            </Button>
+        </GridPane>
+    </TitledPane>
 
-    <HBox GridPane.rowIndex="5" GridPane.columnIndex="0" GridPane.columnSpan="4" spacing="10">
+    <TitledPane text="Synchronization" >
+        <GridPane alignment="CENTER" hgap="10" vgap="10">
+            <Label GridPane.rowIndex="0" GridPane.columnIndex="0" GridPane.columnSpan="2"
+                    text="Last synchronization"/>
+            <Label GridPane.rowIndex="0" GridPane.columnIndex="2" GridPane.columnSpan="2"
+                    fx:id="lastSyncLabel"/>
+            <Label GridPane.rowIndex="1" GridPane.columnIndex="0" GridPane.columnSpan="2"
+                    text="Synchronization interval"/>
+            <ComboBox GridPane.rowIndex="1" GridPane.columnIndex="2" GridPane.columnSpan="2"
+                    fx:id="syncIntervalCombo"/>
+        </GridPane>
+    </TitledPane>
+
+    <Separator />
+
+    <HBox spacing="10" alignment="CENTER">
         <Button
                 fx:id="saveButton"
                 text="Save" onAction="#saveConfig">
@@ -89,4 +107,4 @@
         </Button>
     </HBox>
 
-</GridPane>
+</VBox>

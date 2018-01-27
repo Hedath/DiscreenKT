@@ -1,28 +1,23 @@
-package com.herolds.discreenktgui.App;
+package com.herolds.discreenktgui.app;
 
+import com.herolds.discreenktgui.controller.Controller;
 import javafx.application.Application;
 import javafx.application.Platform;
 import javafx.fxml.FXMLLoader;
-import javafx.geometry.Pos;
 import javafx.scene.Node;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
-import javafx.scene.control.Label;
 import javafx.scene.layout.BorderPane;
-import javafx.scene.layout.StackPane;
-import javafx.scene.layout.VBox;
-import javafx.scene.paint.Color;
 import javafx.stage.Stage;
-import javafx.stage.StageStyle;
 
 import javax.imageio.ImageIO;
+import java.awt.*;
 import java.io.IOException;
+import java.io.InputStream;
 import java.net.URL;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
-import java.util.Date;
 import java.util.Timer;
-import java.util.TimerTask;
 
 /**
  * For the tray icon solution, see: https://gist.github.com/jewelsea/e231e89e8d36ef4e5d8a
@@ -31,11 +26,12 @@ public class Main extends Application {
 
     // one icon location is shared between the application tray icon and task bar icon.
     // you could also use multiple icons to allow for clean display of tray icons on hi-dpi devices.
-    private static final String iconImageLoc =
-            "http://icons.iconarchive.com/icons/scafer31000/bubble-circle-3/16/GameCenter-icon.png";
+    private static final URL iconImageLoc = Main.class.getClassLoader().getResource("icon.png");
 
     // application stage is stored so that it can be shown and hidden based on system tray icon operations.
     private Stage stage;
+
+    private TrayIcon trayIcon;
 
     // a timer allowing the tray icon to provide a periodic notification event.
     private Timer notificationTimer = new Timer();
@@ -67,7 +63,7 @@ public class Main extends Application {
                 "-fx-background-color: rgba(255, 255, 255, 1);"
         );
 
-        layout.setPrefSize(400, 200);
+        layout.setPrefSize(370, 100);
 
 
         // this dummy app just hides itself when the app screen is clicked.
@@ -93,9 +89,10 @@ public class Main extends Application {
         Parent root = null;
 
         try {
-            URL url = getClass().getClassLoader().getResource("DiscreenKTGUI.fxml");
-
-            root = FXMLLoader.load(url);
+            FXMLLoader fxmlLoader = new FXMLLoader();
+            InputStream inputStream = getClass().getClassLoader().getResource("DiscreenKTGUI.fxml").openStream();
+            root = fxmlLoader.load(inputStream);
+            Controller controller = fxmlLoader.getController();
         } catch (Exception e) {
             e.printStackTrace();
         }
@@ -125,15 +122,11 @@ public class Main extends Application {
 
             // set up a system tray icon.
             java.awt.SystemTray tray = java.awt.SystemTray.getSystemTray();
-            URL imageLoc = new URL(
-                    iconImageLoc
-            );
-            java.awt.Image image = ImageIO.read(imageLoc);
-            java.awt.TrayIcon trayIcon = new java.awt.TrayIcon(image);
+            java.awt.Image image = ImageIO.read(iconImageLoc);
+            trayIcon = new java.awt.TrayIcon(image);
 
             // if the user double-clicks on the tray icon, show the main app stage.
             trayIcon.addActionListener(event -> Platform.runLater(this::showStage));
-
             // if the user selects the default menu item (which includes the app name),
             // show the main app stage.
             java.awt.MenuItem openItem = new java.awt.MenuItem("Settings");
@@ -163,6 +156,7 @@ public class Main extends Application {
 
             // add the application tray icon to the system tray.
             tray.add(trayIcon);
+
         } catch (java.awt.AWTException | IOException e) {
             System.out.println("Unable to init system tray");
             e.printStackTrace();
