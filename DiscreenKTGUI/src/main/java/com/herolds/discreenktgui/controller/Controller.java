@@ -1,24 +1,28 @@
 package com.herolds.discreenktgui.controller;
 
+import com.herolds.discreenkt.api.DiscreenKTAPI;
+import com.herolds.discreenkt.api.listener.DiscreenKTListener;
+import com.herolds.discreenkt.api.listener.events.*;
 import com.herolds.discreenktgui.config.ConfigProvider;
 import com.herolds.discreenktgui.enums.SynchronizationInterval;
 import com.herolds.discreenktgui.validators.PathValidator;
+import javafx.application.Platform;
 import javafx.beans.binding.Bindings;
 import javafx.beans.binding.BooleanBinding;
 import javafx.collections.FXCollections;
+import javafx.concurrent.Task;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
-import javafx.scene.control.Button;
-import javafx.scene.control.ComboBox;
-import javafx.scene.control.Label;
-import javafx.scene.control.TextField;
+import javafx.scene.control.*;
+import javafx.scene.text.Text;
+import javafx.scene.text.TextFlow;
 import javafx.stage.DirectoryChooser;
-import org.controlsfx.control.Notifications;
 import org.controlsfx.validation.ValidationSupport;
 import java.io.File;
 import java.io.IOException;
+import java.text.DecimalFormat;
 
-public class Controller {
+public class Controller implements DiscreenKTListener {
 
     @FXML
     public Button cachePathButton;
@@ -40,18 +44,29 @@ public class Controller {
     public Label lastSyncLabel;
     @FXML
     public ComboBox syncIntervalCombo;
-
+    @FXML
+    public ProgressBar progressBar;
+    @FXML
+    public Label progressLabel;
+    @FXML
+    public TitledPane activityPane;
+    @FXML
+    public TextArea progressTextArea;
+    @FXML
+    public TextFlow progressTextFlow;
 
     private final String configPath;
 
+
+
     private ConfigProvider configProvider;
+    private final DiscreenKTAPI discreenKTAPI;
+
+    private int maxMovieCount;
+
 
     public Controller() {
         this.configPath = getClass().getClassLoader().getResource("config.properties").getPath();
-    }
-
-    @FXML
-    public void initialize() {
 
         try {
             ConfigProvider.initConfigProvider(this.configPath);
@@ -61,12 +76,20 @@ public class Controller {
             e.printStackTrace();
         }
 
+        this.discreenKTAPI = new DiscreenKTAPI(this, configProvider.getConfigProperties());
+    }
+
+    @FXML
+    public void initialize() {
+
         lastSyncLabel.setText("No synchronization.");
 
         syncIntervalCombo.setItems(FXCollections.observableArrayList(SynchronizationInterval.values()));
 
         cachePathTextField.setText(configProvider.getMovieCacheFolder());
         posterPathTextField.setText(configProvider.getPosterDownloadFolder());
+
+        progressBar.setProgress(0);
 
         setupValidations();
         setupBindings();
@@ -75,11 +98,13 @@ public class Controller {
     @FXML
     public void selectCachePath(ActionEvent actionEvent) {
         this.selectPath(cachePathTextField, cachePathButton);
+        configProvider.setMovieCacheFolder(cachePathTextField.getText());
     }
 
     @FXML
     public void selectPosterPath(ActionEvent actionEvent) {
         this.selectPath(posterPathTextField, posterPathButton);
+        configProvider.setPosterDownloadFolder(posterPathTextField.getText());
     }
 
     @FXML
@@ -106,7 +131,22 @@ public class Controller {
         posterPathTextField.setText(configProvider.getPosterDownloadFolder());
     }
 
-    protected void selectPath(TextField textField, Button button) {
+    @FXML
+    public void startDiscreenKT(ActionEvent actionEvent) {
+        Task<Void> task = new Task<Void>() {
+            @Override
+            protected Void call() throws Exception {
+                discreenKTAPI.startDownload(configProvider.getConfigProperties());
+                return null;
+            }
+        };
+
+        Thread th = new Thread(task);
+        th.setDaemon(true);
+        th.start();
+    }
+
+    private void selectPath(TextField textField, Button button) {
         DirectoryChooser directoryChooser = new DirectoryChooser();
 
         directoryChooser.setTitle("Choose cache destination folder!");
@@ -115,7 +155,7 @@ public class Controller {
         textField.setText(directory.getAbsolutePath());
     }
 
-    protected void setupValidations() {
+    private void setupValidations() {
         ValidationSupport support = new ValidationSupport();
 
         PathValidator pathValidator = new PathValidator();
@@ -127,7 +167,7 @@ public class Controller {
         support.redecorate();
     }
 
-    protected void setupBindings() {
+    private void setupBindings() {
         PathValidator pathValidator = new PathValidator();
 
 
@@ -153,5 +193,73 @@ public class Controller {
         startButton.disableProperty().bind(invalidPathsBooleanBinding);
         // Reset button is disabled when one of the paths is invalid.
         resetButton.disableProperty().bind(invalidPathsBooleanBinding);
+    }
+
+    @Override
+    public void onStart(StartEvent startEvent) {
+        System.out.println("OnStart:" + startEvent.getNumberOfMovies());
+
+        maxMovieCount = startEvent.getNumberOfMovies();
+
+        Platform.runLater(() -> {
+            progressBar.setProgress(0);
+            progressLabel.setText("");
+
+            progressTextFlow.getChildren().clear();
+            appendToTextFlow("Started!\n", "-fx-fill: ORANGE;");
+        });
+    }
+
+    @Override
+    public void onPosterDownload(PosterDownloadEvent posterDownloadEvent) {
+        System.out.println("OnPosterDownloadEvent:" + posterDownloadEvent.getMovieTitle());
+
+        final double progress = progressBar.getProgress();
+
+        double nextProgress = progress + 1.0 / maxMovieCount;
+
+        if (nextProgress > 1.0) {
+            nextProgress = 1.0;
+        }
+
+        System.out.println("Nextprog:" + nextProgress);
+        progressBar.setProgress(nextProgress);
+
+        double finalNextProgress = nextProgress;
+        Platform.runLater(() -> {
+            double percentage = finalNextProgress * 100;
+            String progressText = new DecimalFormat("#.##").format(percentage);
+            progressLabel.setText(String.valueOf(progressText + "%"));
+            appendToTextFlow("Movie: " + posterDownloadEvent.getMovieTitle() + "..." + (posterDownloadEvent.isSuccess() ? "SUCCESS" : "FAILED") + "\n", posterDownloadEvent.isSuccess() ? "-fx-fill: GREEN;" : "-fx-fill: RED;");
+        });
+
+    }
+
+    @Override
+    public void onBatchFinished(BatchFinishedEvent batchFinishedEvent) {
+        System.out.println("BatchFinishedEvent");
+    }
+
+    @Override
+    public void onError(ErrorEvent errorEvent) {
+        System.out.println("ErrorEvent");
+    }
+
+    @Override
+    public void onFinish(FinishEvent finishEvent) {
+        System.out.println("FinishEvent");
+        Platform.runLater(() -> {
+            progressBar.setProgress(1);
+            progressLabel.setText("Finished!");
+
+            appendToTextFlow("Finished!", "-fx-fill: ORANGE;");
+        });
+    }
+
+    private void appendToTextFlow(String text, String style) {
+        Text txt = new Text();
+        txt.setText(text);
+        txt.setStyle(style);
+        progressTextFlow.getChildren().add(txt);
     }
 }

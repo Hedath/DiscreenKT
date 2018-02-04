@@ -12,6 +12,11 @@
 <?import javafx.scene.control.ComboBox?>
 <?import javafx.scene.layout.VBox?>
 
+<?import javafx.scene.control.ProgressBar?>
+<?import javafx.scene.control.TextArea?>
+<?import javafx.scene.text.TextFlow?>
+<?import javafx.scene.control.ScrollPane?>
+<?import javafx.scene.layout.AnchorPane?>
 <VBox
         fx:controller="com.herolds.discreenktgui.controller.Controller" xmlns:fx="http://javafx.com/fxml"
         alignment="CENTER" spacing="10">
@@ -92,7 +97,7 @@
 
         <Button
                 fx:id="startButton"
-                text="Start">
+                text="Start" onAction="#startDiscreenKT">
             <graphic>
                 <Glyph fontFamily="FontAwesome" icon="play"/>
             </graphic>
@@ -106,5 +111,28 @@
             </graphic>
         </Button>
     </HBox>
+
+    <TitledPane fx:id="activityPane" text="Activity">
+        <VBox spacing="10" alignment="CENTER">
+            <HBox spacing="10" alignment="CENTER_LEFT">
+                <Label
+                       text="Progress"/>
+                <GridPane>
+                    <ProgressBar GridPane.columnIndex="0" GridPane.rowIndex="0" GridPane.halignment="CENTER"
+                            fx:id="progressBar" minWidth="220">
+                    </ProgressBar>
+
+                    <Label GridPane.columnIndex="0" GridPane.rowIndex="0" GridPane.halignment="CENTER"
+                            fx:id="progressLabel"/>
+                </GridPane>
+            </HBox>
+
+            <HBox spacing="10" alignment="CENTER">
+                <ScrollPane maxWidth="Infinity" minHeight="200" minWidth="300">
+                    <TextFlow fx:id="progressTextFlow"/>
+                </ScrollPane>
+            </HBox>
+        </VBox>
+    </TitledPane>
 
 </VBox>

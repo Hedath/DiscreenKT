@@ -9,6 +9,7 @@ import javafx.scene.Parent;
 import javafx.scene.Scene;
 import javafx.scene.layout.BorderPane;
 import javafx.stage.Stage;
+import org.controlsfx.control.Notifications;
 
 import javax.imageio.ImageIO;
 import java.awt.*;
@@ -17,7 +18,9 @@ import java.io.InputStream;
 import java.net.URL;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
+import java.util.Date;
 import java.util.Timer;
+import java.util.TimerTask;
 
 /**
  * For the tray icon solution, see: https://gist.github.com/jewelsea/e231e89e8d36ef4e5d8a

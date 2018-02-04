@@ -14,6 +14,11 @@
             <artifactId>controlsfx</artifactId>
             <version>8.40.14</version>
         </dependency>
+        <dependency>
+            <groupId>com.herolds.discreenkt</groupId>
+            <artifactId>discreenkt</artifactId>
+            <version>1.0-SNAPSHOT</version>
+        </dependency>
     </dependencies>
 
     <build>

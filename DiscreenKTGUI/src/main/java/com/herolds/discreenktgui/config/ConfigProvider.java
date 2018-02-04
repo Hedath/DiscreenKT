@@ -71,6 +71,10 @@ public class ConfigProvider {
         configProperties.setProperty(MOVIE_CACHE_FOLDER_KEY, movieCacheFolder);
     }
 
+    public Properties getConfigProperties() {
+        return configProperties;
+    }
+
     private String getProperty(String key) {
         return configProperties.getProperty(key);
     }
