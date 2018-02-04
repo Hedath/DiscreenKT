@@ -38,6 +38,10 @@ public class ConfigProvider {
         instance = new ConfigProvider(config);
     }
 
+    public static void initConfigProvider(Properties config) {
+        instance = new ConfigProvider(config);
+    }
+
     public String getMovieListUrlPattern() {
         return getProperty(MOVIE_LIST_URL_PATTERN_KEY);
     }

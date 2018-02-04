@@ -1,5 +1,7 @@
 package com.herolds.discreenkt;
 
+import com.herolds.discreenkt.api.DiscreenKTAPI;
+import com.herolds.discreenkt.api.listener.DefaultListener;
 import com.herolds.discreenkt.config.ConfigProvider;
 import com.herolds.discreenkt.data.Movie;
 import com.herolds.discreenkt.service.MovieCache;
@@ -54,18 +56,9 @@ public class Application {
     }
 
     private static void downloadPosters() {
-        try {
-            MovieListParser movieListParser = new MovieListParser();
-            List<Movie> movies = movieListParser.getMovieLinks(ConfigProvider.getInstance().getMovieListUrl());
-//            movies.forEach(Application::printMovie);
+        DiscreenKTAPI api = new DiscreenKTAPI(new DefaultListener(), null);
 
-            MoviePosterManager moviePosterManager = new MoviePosterManager();
-            moviePosterManager.processMovieList(movies);
-        } catch (Exception e) {
-            e.printStackTrace();
-        } finally {
-            MovieCache.getInstance().close();
-        }
+        api.startDownload(null);
     }
 
     private static void printMovie(Movie movie) {
