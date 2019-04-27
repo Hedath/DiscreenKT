@@ -15,10 +15,13 @@ public class DiscreenKTException extends Throwable {
 	private ErrorEvent errorEvent;
 
 	public DiscreenKTException(ErrorEvent errorEvent) {
+		super(errorEvent.getMessage());
 		this.errorEvent = errorEvent;
+		
 	}
 
 	public DiscreenKTException(String errorMessage) {
+		super(errorMessage);
 		this.errorEvent = new ErrorEvent(errorMessage);
 	}
 }

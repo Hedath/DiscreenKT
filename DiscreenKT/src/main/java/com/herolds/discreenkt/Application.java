@@ -9,11 +9,11 @@ import org.apache.commons.cli.HelpFormatter;
 import org.apache.commons.cli.Option;
 import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.herolds.discreenkt.api.DiscreenKTAPI;
-import com.herolds.discreenkt.api.listener.DefaultListener;
 import com.herolds.discreenkt.config.ConfigProvider;
-import com.herolds.discreenkt.data.Movie;
 import com.omertron.themoviedbapi.MovieDbException;
 
 /**
@@ -21,11 +21,13 @@ import com.omertron.themoviedbapi.MovieDbException;
  * Created by Benedek Herold on 2017.07.15.
  */
 public class Application {
+	private static final Logger logger = LoggerFactory.getLogger(Application.class);
+	
     public static void main(String[] args) throws MovieDbException {
         try {
             parseArguments(args);
         } catch (IOException e) {
-            e.printStackTrace();
+        	logger.error("Error while parsing arguments: ", e);
             return;
         }
 
@@ -45,7 +47,7 @@ public class Application {
         try {
             cmd = parser.parse(options, args);
         } catch (ParseException e) {
-            System.out.println(e.getMessage());
+        	logger.error("Error while parsing command line: ", e);
 
             HelpFormatter formatter = new HelpFormatter();
             formatter.printHelp("utility-name", options);
@@ -59,17 +61,9 @@ public class Application {
     }
 
     private static void downloadPosters() {
-        DiscreenKTAPI api = new DiscreenKTAPI(new DefaultListener(), null);
+    	DiscreenKTAPI api = new DiscreenKTAPI();
 
         api.startDownload(null);
         api.exit();
-    }
-
-    private static void printMovie(Movie movie) {
-        System.out.println(movie.getKTid() + "\t" +
-                movie.getTitle() + "\t" +
-                movie.getSecondaryTitle() + "\t" +
-                movie.getLink() + "\t" +
-                movie.getYear());
     }
 }

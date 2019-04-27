@@ -5,9 +5,11 @@ import java.util.List;
 import java.util.Optional;
 import java.util.Properties;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import com.herolds.discreenkt.api.listener.DefaultListener;
 import com.herolds.discreenkt.api.listener.DiscreenKTListener;
-import com.herolds.discreenkt.api.listener.events.BatchFinishedEvent;
 import com.herolds.discreenkt.api.listener.events.ErrorEvent;
 import com.herolds.discreenkt.api.listener.events.FinishEvent;
 import com.herolds.discreenkt.api.listener.events.PosterDownloadEvent;
@@ -24,10 +26,18 @@ import com.herolds.discreenkt.service.exception.DiscreenKTException;
  */
 public class DiscreenKTAPI implements DiscreenKTListener {
 
+	Logger logger = LoggerFactory.getLogger(DiscreenKTAPI.class);
+	
     private final DiscreenKTListener listener;
     
     private final MoviePosterManager moviePosterManager;
 
+    public DiscreenKTAPI() {        
+        this.listener = new DefaultListener();
+    	
+    	this.moviePosterManager = new MoviePosterManager(this);
+    }
+    
     public DiscreenKTAPI(DiscreenKTListener listener, Properties properties) {
         if (listener == null) {
             this.listener = new DefaultListener();
@@ -35,7 +45,10 @@ public class DiscreenKTAPI implements DiscreenKTListener {
             this.listener = listener;
         }
 
-        ConfigProvider.initConfigProvider(properties);
+        if (properties != null) {
+        	ConfigProvider.initConfigProvider(properties);        	
+        }
+        
         this.moviePosterManager = new MoviePosterManager(this);
     }
 
@@ -47,13 +60,12 @@ public class DiscreenKTAPI implements DiscreenKTListener {
         try {
             MovieListParser movieListParser = new MovieListParser();
             List<Movie> movies = movieListParser.getMovieLinks(ConfigProvider.getInstance().getMovieListUrl());
-
             moviePosterManager.processMovieList(movies);
         } catch (DiscreenKTException e) {
             onError(e.getErrorEvent());
-        }
-        catch (Exception e) {
-            e.printStackTrace();
+        } catch (Exception e) {
+        	logger.error("Unexpected error", e);
+        	
             ErrorEvent event = new ErrorEvent("Internal error! Please contact support services.");
             onError(event);
         }
@@ -75,11 +87,6 @@ public class DiscreenKTAPI implements DiscreenKTListener {
     @Override
     public void onPosterDownload(PosterDownloadEvent event) {
         listener.onPosterDownload(event);
-    }
-
-    @Override
-    public void onBatchFinished(BatchFinishedEvent event) {
-        listener.onBatchFinished(event);
     }
 
     @Override

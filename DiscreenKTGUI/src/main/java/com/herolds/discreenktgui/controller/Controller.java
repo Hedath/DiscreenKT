@@ -13,15 +13,16 @@ import java.util.Locale;
 import java.util.Optional;
 
 import org.controlsfx.validation.ValidationSupport;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.herolds.discreenkt.api.DiscreenKTAPI;
 import com.herolds.discreenkt.api.listener.DiscreenKTListener;
-import com.herolds.discreenkt.api.listener.events.BatchFinishedEvent;
 import com.herolds.discreenkt.api.listener.events.ErrorEvent;
 import com.herolds.discreenkt.api.listener.events.FinishEvent;
 import com.herolds.discreenkt.api.listener.events.PosterDownloadEvent;
 import com.herolds.discreenkt.api.listener.events.StartEvent;
-import com.herolds.discreenktgui.config.ConfigProvider;
+import com.herolds.discreenktgui.config.UserSettingsProvider;
 import com.herolds.discreenktgui.enums.SynchronizationInterval;
 import com.herolds.discreenktgui.validators.PathValidator;
 
@@ -45,6 +46,8 @@ import javafx.stage.DirectoryChooser;
 
 public class Controller implements DiscreenKTListener {
 
+	private final Logger logger = LoggerFactory.getLogger(Controller.class);
+	
     @FXML
     public Button cachePathButton;
     @FXML
@@ -78,18 +81,19 @@ public class Controller implements DiscreenKTListener {
 
     private final URI configPath;
 
-    private ConfigProvider configProvider;
+    private UserSettingsProvider configProvider;
     private final DiscreenKTAPI discreenKTAPI;
 
     private int maxMovieCount;
+
 
 
     public Controller() throws URISyntaxException {
         this.configPath = Controller.class.getClassLoader().getResource("config.properties").toURI();
 
         try {
-            ConfigProvider.initConfigProvider(this.configPath);
-            configProvider = ConfigProvider.getInstance();
+            UserSettingsProvider.initConfigProvider(this.configPath);
+            configProvider = UserSettingsProvider.getInstance();
         } catch (IOException e) {
             // TODO: Show error message or something
             e.printStackTrace();
@@ -212,12 +216,13 @@ public class Controller implements DiscreenKTListener {
         // Start button is disabled when one of the paths is invalid.
         startButton.disableProperty().bind(invalidPathsBooleanBinding);
         // Reset button is disabled when one of the paths is invalid.
-        resetButton.disableProperty().bind(invalidPathsBooleanBinding);
+        
+        // resetButton.disableProperty().bind(invalidPathsBooleanBinding);
     }
 
     @Override
     public void onStart(StartEvent startEvent) {
-        System.out.println("OnStart:" + startEvent.getNumberOfMovies());
+    	logger.info("Starting downloads: {}", startEvent.getNumberOfMovies());
 
         maxMovieCount = startEvent.getNumberOfMovies();
 
@@ -232,47 +237,39 @@ public class Controller implements DiscreenKTListener {
 
     @Override
     public void onPosterDownload(PosterDownloadEvent posterDownloadEvent) {
-        System.out.println("OnPosterDownloadEvent:" + posterDownloadEvent.getMovieTitle());
+    	logger.info("Downloading poster: {}", posterDownloadEvent.getMovieTitle());
 
         final double progress = progressBar.getProgress();
 
         double nextProgress = progress + 1.0 / maxMovieCount;
 
-        if (nextProgress > 1.0) {
-            nextProgress = 1.0;
-        }
-
-        System.out.println("Nextprog:" + nextProgress);
-        progressBar.setProgress(nextProgress);
-
-        double finalNextProgress = nextProgress;
+        final double finalNextProgress = nextProgress > 1.0 ? 1 : nextProgress;
+        progressBar.setProgress(finalNextProgress);
+        
         Platform.runLater(() -> {
-            double percentage = finalNextProgress * 100;
+            double percentage = nextProgress * 100;
             String progressText = new DecimalFormat("#.##").format(percentage);
             progressLabel.setText(String.valueOf(progressText + "%"));
-            appendToTextFlow(posterDownloadEvent.getMovieTitle() + "..." + (posterDownloadEvent.isSuccess() ? "SUCCESS" : "FAILED") + "\n", posterDownloadEvent.isSuccess() ? "-fx-fill: GREEN;" : "-fx-fill: RED;");
+            appendToTextFlow(posterDownloadEvent.getMovieTitle() + "..." + (posterDownloadEvent.isSuccess() ? "SUCCESS" : posterDownloadEvent.getMessage()) + "\n", posterDownloadEvent.isSuccess() ? "-fx-fill: GREEN;" : "-fx-fill: RED;");
         });
 
     }
 
     @Override
-    public void onBatchFinished(BatchFinishedEvent batchFinishedEvent) {
-        System.out.println("BatchFinishedEvent");
-    }
-
-    @Override
     public void onError(ErrorEvent errorEvent) {
-        System.out.println("ErrorEvent");
+    	logger.warn("Error during poster synchronization: {}", errorEvent.getMessage());
     }
 
     @Override
     public void onFinish(FinishEvent finishEvent) {
-        System.out.println("FinishEvent");
+        logger.info("Finished poster synchronization");
+
         Platform.runLater(() -> {
             progressBar.setProgress(1);
             progressLabel.setText("Finished!");
 
             appendToTextFlow("Finished!", "-fx-fill: ORANGE;");
+            
             setLastSyncronization();
         });
     }
@@ -281,13 +278,14 @@ public class Controller implements DiscreenKTListener {
         Text txt = new Text();
         txt.setText(text);
         txt.setStyle(style);
+        
         progressTextFlow.getChildren().add(txt);
     }
     
     private void setLastSyncronization() {
-    	DateTimeFormatter formatter = DateTimeFormatter.ofLocalizedDateTime( FormatStyle.SHORT )
-    		                     .withLocale( Locale.getDefault() )
-    		                     .withZone( ZoneId.systemDefault() );
+    	DateTimeFormatter formatter = DateTimeFormatter.ofLocalizedDateTime(FormatStyle.SHORT)
+    		                     .withLocale(Locale.getDefault())
+    		                     .withZone(ZoneId.systemDefault());
     	
     	Optional<Instant> lastSynchronization = discreenKTAPI.getLastSynchronization();
     	

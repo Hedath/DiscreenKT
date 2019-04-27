@@ -9,23 +9,21 @@ import java.nio.file.Paths;
 import java.util.Properties;
 
 /**
- * Singleton class for accessing application wide configurations.
- * Created by Benedek Herold on 2017.07.15.
- *
+ * Singleton class for accessing user provided settings.
  */
-public class ConfigProvider {
+public class UserSettingsProvider {
     private static final String POSTER_DOWNLOAD_FOLDER_KEY = "poster_download_folder";
     private static final String MOVIE_CACHE_FOLDER_KEY = "movie_cache_folder";
 
-    private static ConfigProvider instance;
+    private static UserSettingsProvider instance;
 
     private final Properties configProperties;
 
-    private ConfigProvider(Properties configProperties) {
+    private UserSettingsProvider(Properties configProperties) {
         this.configProperties = configProperties;
     }
 
-    public static ConfigProvider getInstance() {
+    public static UserSettingsProvider getInstance() {
         return instance;
     }
 
@@ -36,7 +34,7 @@ public class ConfigProvider {
             config.load(configFileStream);
         }
 
-        instance = new ConfigProvider(config);
+        instance = new UserSettingsProvider(config);
     }
 
     public void writeConfig(URI configFilePath) throws IOException {

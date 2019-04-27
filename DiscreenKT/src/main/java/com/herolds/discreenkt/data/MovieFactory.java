@@ -1,11 +1,14 @@
 package com.herolds.discreenkt.data;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 /**
  * @author bence
  */
 public class MovieFactory {
 
-	// TODO: proper logging
+	private static final Logger logger = LoggerFactory.getLogger(MovieFactory.class);
 
 	public static Movie create(String title, String secondaryTitle, String link) {
 		return Movie.builder()
@@ -23,7 +26,7 @@ public class MovieFactory {
 		int idEndIndex = movieLink.indexOf('/');
 
 		if (idEndIndex == -1) {
-			System.out.println("Could not find id: " + movieLink);
+			logger.error("Could not find id in movie link: {}", movieLink);
 			return 0;
 		}
 
@@ -41,8 +44,7 @@ public class MovieFactory {
 		int yearStartIndex = movieLink.lastIndexOf('-');
 
 		if (yearStartIndex == -1) {
-			System.out.println("Could not find year: " + movieLink);
-
+			logger.error("Could not find year: ", movieLink);
 			return 0;
 		}
 
@@ -51,7 +53,9 @@ public class MovieFactory {
 		try {
 			return Integer.parseInt(year);
 		} catch (NumberFormatException e) {
-			e.printStackTrace();
+			logger.error("Error while parsing year in movie link: {}", movieLink);
+			logger.error("Exception: ", e);
+			
 			return 0;
 		}
 	}

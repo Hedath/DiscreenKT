@@ -7,10 +7,13 @@ import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.nio.file.StandardCopyOption;
 import java.util.List;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 import org.apache.http.client.HttpClient;
 import org.apache.http.impl.client.HttpClientBuilder;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.herolds.discreenkt.api.listener.DiscreenKTListener;
 import com.herolds.discreenkt.api.listener.events.FinishEvent;
@@ -34,6 +37,8 @@ import com.omertron.themoviedbapi.tools.HttpTools;
  */
 public class MoviePosterManager {
 
+	private final Logger logger = LoggerFactory.getLogger(MoviePosterManager.class);
+	
     private TmdbSearch tmdbSearch;
     private MovieCache movieCache;
 
@@ -82,14 +87,14 @@ public class MoviePosterManager {
         PosterDownloadEvent event = new PosterDownloadEvent();
         event.setMovieTitle(movie.getTitle());
 
-        MovieInfo movieInfo = getMovieInfo(movie);
+        Optional<MovieInfo> movieInfo = getMovieInfo(movie);
 
-        if (movieInfo != null && movieInfo.getPosterPath() != null) {
+        if (movieInfo.isPresent() && movieInfo.get().getPosterPath() != null) {
             ConfigProvider configProvider = ConfigProvider.getInstance();
             String baseUrl = configProvider.getMovieDBPosterBaseUrl();
             String outputPath = configProvider.getPosterDownloadFolder();
 
-            String posterFileName = movieInfo.getPosterPath();
+            String posterFileName = movieInfo.get().getPosterPath();
 
             String posterUrl = baseUrl + posterFileName;
 
@@ -98,14 +103,13 @@ public class MoviePosterManager {
                 movieCache.putMovie(movie);
                 event.setSuccess(true);
             } catch (IOException e) {
-                e.printStackTrace();
-                System.out.println(e);
+                logger.error("Exception while copying poster file", e);
                 event.setSuccess(false);
             }
         } else {
             // TODO: Gather somewhere those movies for which it couldn't find a poster
-        	System.out.println("Could not found movie poster: " + movie.getTitle());
-        	event.setMessage("Could not found movie poster");
+        	logger.warn("Could not found movie poster: " + movie.getTitle());
+        	event.setMessage("Not found");
             event.setSuccess(false);
         }
 
@@ -113,32 +117,32 @@ public class MoviePosterManager {
         return event;
     }
 
-    private MovieInfo getMovieInfo(Movie movie) {
+    private Optional<MovieInfo> getMovieInfo(Movie movie) {
         try {
             ResultList<MovieInfo> movieSearchResult = tmdbSearch.searchMovie(movie.getTitle(), 1, null, false, movie.getYear(), null, null);
 
-            //logSearchResults(movie, movieSearchResult);
+            logSearchResults(movie, movieSearchResult);
 
             if (!movieSearchResult.isEmpty()) {
                 // TODO: Choose from results by title (exact match), or release year, if needed
-                return movieSearchResult.getResults().get(0);
+                return Optional.of(movieSearchResult.getResults().get(0));
             }
         } catch (MovieDbException e) {
-            e.printStackTrace();
+            logger.error("Exception while getting movies from tmdb: ", e);
         }
 
-        return null;
+        return Optional.empty();
     }
 
     private void logSearchResults(Movie movie, ResultList<MovieInfo> movieSearchResult) {
-        System.out.println("----------------------------------");
-        System.out.println("Search movie: " + movie.getTitle());
-        System.out.println("\t Results: " + movieSearchResult.getTotalResults());
+    	logger.trace("----------------------------------");
+        logger.trace("Search movie: " + movie.getTitle());
+        logger.trace("\t Results: " + movieSearchResult.getTotalResults());
         for (MovieInfo movieInfo : movieSearchResult.getResults()) {
-            System.out.println("--");
-            System.out.println("\t\t Title: " + movieInfo.getTitle());
-            System.out.println("\t\t Release: " + movieInfo.getReleaseDate());
-            System.out.println("\t\t PosterPath: " + movieInfo.getPosterPath());
+            logger.trace("--");
+            logger.trace("\t\t Title: " + movieInfo.getTitle());
+            logger.trace("\t\t Release: " + movieInfo.getReleaseDate());
+            logger.trace("\t\t PosterPath: " + movieInfo.getPosterPath());
         }
     }
 }

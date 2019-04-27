@@ -10,6 +10,9 @@ import java.util.Timer;
 
 import javax.imageio.ImageIO;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import com.herolds.discreenkt.service.MovieCache;
 
 import javafx.application.Application;
@@ -25,6 +28,8 @@ import javafx.stage.Stage;
  * For the tray icon solution, see: https://gist.github.com/jewelsea/e231e89e8d36ef4e5d8a
  */
 public class Main extends Application {
+	
+	Logger logger = LoggerFactory.getLogger(Main.class);
 	
     // one icon location is shared between the application tray icon and task bar icon.
     // you could also use multiple icons to allow for clean display of tray icons on hi-dpi devices.
@@ -121,7 +126,7 @@ public class Main extends Application {
 
             // app requires system tray support, just exit if there is no support.
             if (!java.awt.SystemTray.isSupported()) {
-                System.out.println("No system tray support, application exiting.");
+            	logger.error("No system tray support, application exiting.");
                 Platform.exit();
             }
 
@@ -165,8 +170,7 @@ public class Main extends Application {
             tray.add(trayIcon);
 
         } catch (java.awt.AWTException | IOException e) {
-            System.out.println("Unable to init system tray");
-            e.printStackTrace();
+        	logger.error("Unable to init system tray", e);
         }
     }
 

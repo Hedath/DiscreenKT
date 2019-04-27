@@ -65,11 +65,6 @@ public class MovieCache {
 
         cache = persistentCacheManager.getCache("movieCache", Integer.class, Movie.class);
         synchronizationCache = persistentCacheManager.getCache("synchronizationCache", Instant.class, Long.class);
-        
-        System.out.println("movieCache");
-        cache.forEach(entry -> System.out.println("Key: " + entry.getKey() + " Value: " + entry.getValue()));
-        System.out.println("synchronizationCache");
-        synchronizationCache.forEach(entry -> System.out.println("Key: " + entry.getKey() + " Value: " + entry.getValue()));
     }
     
     public void putSynchronization(Long successCount) {
