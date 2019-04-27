@@ -1,5 +1,17 @@
 package com.herolds.discreenkt.service;
 
+import java.io.IOException;
+import java.io.InputStream;
+import java.net.URL;
+import java.nio.file.Files;
+import java.nio.file.Paths;
+import java.nio.file.StandardCopyOption;
+import java.util.List;
+import java.util.stream.Collectors;
+
+import org.apache.http.client.HttpClient;
+import org.apache.http.impl.client.HttpClientBuilder;
+
 import com.herolds.discreenkt.api.listener.DiscreenKTListener;
 import com.herolds.discreenkt.api.listener.events.FinishEvent;
 import com.herolds.discreenkt.api.listener.events.PosterDownloadEvent;
@@ -12,16 +24,6 @@ import com.omertron.themoviedbapi.methods.TmdbSearch;
 import com.omertron.themoviedbapi.model.movie.MovieInfo;
 import com.omertron.themoviedbapi.results.ResultList;
 import com.omertron.themoviedbapi.tools.HttpTools;
-import org.apache.http.client.HttpClient;
-import org.apache.http.impl.client.HttpClientBuilder;
-
-import java.io.IOException;
-import java.io.InputStream;
-import java.net.URL;
-import java.nio.file.Files;
-import java.nio.file.Paths;
-import java.nio.file.StandardCopyOption;
-import java.util.List;
 
 /**
  * Class for managing and downloading posters for movies.
@@ -49,26 +51,34 @@ public class MoviePosterManager {
     }
 
     public void processMovieList(List<Movie> movies) throws DiscreenKTException {
+    	List<Movie> postersToDownload = movies.stream()
+        	.filter(this::isPosterNeeded)
+        	.collect(Collectors.toList());
+    	
+    	listener.onStart(StartEvent.builder()
+        		.numberOfMovies(postersToDownload.size())
+        		.build());
 
-        StartEvent startEvent = new StartEvent();
+        List<PosterDownloadEvent> posterDownloadEvents = postersToDownload.stream()
+                .map(this::downloadPoster)
+                .collect(Collectors.toList());
+        
+        long successCount = posterDownloadEvents.stream()
+        		.filter(PosterDownloadEvent::isSuccess)
+        		.count();
+        
+        movieCache.putSynchronization(successCount);
 
-        startEvent.setNumberOfMovies(movies.size());
-
-        listener.onStart(startEvent);
-
-        movies.stream()
-                .filter(this::isPosterNeeded)
-                .forEach(this::downloadPoster);
-
-        FinishEvent finishEvent = new FinishEvent();
-        listener.onFinish(finishEvent);
+        listener.onFinish(FinishEvent.builder()
+        		.successCount(successCount)
+        		.build());
     }
 
     private boolean isPosterNeeded(Movie movie) {
         return !movieCache.containsMovie(movie);
     }
 
-    private void downloadPoster(Movie movie) {
+    private PosterDownloadEvent downloadPoster(Movie movie) {
         PosterDownloadEvent event = new PosterDownloadEvent();
         event.setMovieTitle(movie.getTitle());
 
@@ -89,14 +99,18 @@ public class MoviePosterManager {
                 event.setSuccess(true);
             } catch (IOException e) {
                 e.printStackTrace();
+                System.out.println(e);
                 event.setSuccess(false);
             }
         } else {
             // TODO: Gather somewhere those movies for which it couldn't find a poster
+        	System.out.println("Could not found movie poster: " + movie.getTitle());
+        	event.setMessage("Could not found movie poster");
             event.setSuccess(false);
         }
 
         listener.onPosterDownload(event);
+        return event;
     }
 
     private MovieInfo getMovieInfo(Movie movie) {

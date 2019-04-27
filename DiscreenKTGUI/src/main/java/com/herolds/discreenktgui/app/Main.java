@@ -1,6 +1,17 @@
 package com.herolds.discreenktgui.app;
 
-import com.herolds.discreenktgui.controller.Controller;
+import java.awt.TrayIcon;
+import java.io.IOException;
+import java.io.InputStream;
+import java.net.URL;
+import java.text.DateFormat;
+import java.text.SimpleDateFormat;
+import java.util.Timer;
+
+import javax.imageio.ImageIO;
+
+import com.herolds.discreenkt.service.MovieCache;
+
 import javafx.application.Application;
 import javafx.application.Platform;
 import javafx.fxml.FXMLLoader;
@@ -9,24 +20,12 @@ import javafx.scene.Parent;
 import javafx.scene.Scene;
 import javafx.scene.layout.BorderPane;
 import javafx.stage.Stage;
-import org.controlsfx.control.Notifications;
-
-import javax.imageio.ImageIO;
-import java.awt.*;
-import java.io.IOException;
-import java.io.InputStream;
-import java.net.URL;
-import java.text.DateFormat;
-import java.text.SimpleDateFormat;
-import java.util.Date;
-import java.util.Timer;
-import java.util.TimerTask;
 
 /**
  * For the tray icon solution, see: https://gist.github.com/jewelsea/e231e89e8d36ef4e5d8a
  */
 public class Main extends Application {
-
+	
     // one icon location is shared between the application tray icon and task bar icon.
     // you could also use multiple icons to allow for clean display of tray icons on hi-dpi devices.
     private static final URL iconImageLoc = Main.class.getClassLoader().getResource("icon.png");
@@ -45,7 +44,8 @@ public class Main extends Application {
     // sets up the javafx application.
     // a tray icon is setup for the icon, but the main stage remains invisible until the user
     // interacts with the tray icon.
-    @Override public void start(final Stage stage) throws IOException {
+    @Override 
+    public void start(final Stage stage) throws IOException {
         // stores a reference to the stage.
         this.stage = stage;
 
@@ -95,15 +95,17 @@ public class Main extends Application {
             FXMLLoader fxmlLoader = new FXMLLoader();
             InputStream inputStream = getClass().getClassLoader().getResource("DiscreenKTGUI.fxml").openStream();
             root = fxmlLoader.load(inputStream);
-            Controller controller = fxmlLoader.getController();
+            // Controller controller = fxmlLoader.getController();
         } catch (Exception e) {
             e.printStackTrace();
         }
 
-        Scene scene = new Scene(root, 300, 275);
-
+        Scene scene = new Scene(root, 500, 500);
+        
         stage.setTitle("DiscreenKT");
         stage.setScene(scene);
+        stage.setResizable(true);
+        
         stage.show();
 
         return root;
@@ -148,6 +150,8 @@ public class Main extends Application {
             exitItem.addActionListener(event -> {
                 Platform.exit();
                 tray.remove(trayIcon);
+                MovieCache.getInstance().close();
+                System.exit(0);
             });
 
             // setup the popup menu for the application.

@@ -1,11 +1,30 @@
 package com.herolds.discreenktgui.controller;
 
+import java.io.File;
+import java.io.IOException;
+import java.net.URI;
+import java.net.URISyntaxException;
+import java.text.DecimalFormat;
+import java.time.Instant;
+import java.time.ZoneId;
+import java.time.format.DateTimeFormatter;
+import java.time.format.FormatStyle;
+import java.util.Locale;
+import java.util.Optional;
+
+import org.controlsfx.validation.ValidationSupport;
+
 import com.herolds.discreenkt.api.DiscreenKTAPI;
 import com.herolds.discreenkt.api.listener.DiscreenKTListener;
-import com.herolds.discreenkt.api.listener.events.*;
+import com.herolds.discreenkt.api.listener.events.BatchFinishedEvent;
+import com.herolds.discreenkt.api.listener.events.ErrorEvent;
+import com.herolds.discreenkt.api.listener.events.FinishEvent;
+import com.herolds.discreenkt.api.listener.events.PosterDownloadEvent;
+import com.herolds.discreenkt.api.listener.events.StartEvent;
 import com.herolds.discreenktgui.config.ConfigProvider;
 import com.herolds.discreenktgui.enums.SynchronizationInterval;
 import com.herolds.discreenktgui.validators.PathValidator;
+
 import javafx.application.Platform;
 import javafx.beans.binding.Bindings;
 import javafx.beans.binding.BooleanBinding;
@@ -13,14 +32,16 @@ import javafx.collections.FXCollections;
 import javafx.concurrent.Task;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
-import javafx.scene.control.*;
+import javafx.scene.control.Button;
+import javafx.scene.control.ComboBox;
+import javafx.scene.control.Label;
+import javafx.scene.control.ProgressBar;
+import javafx.scene.control.TextArea;
+import javafx.scene.control.TextField;
+import javafx.scene.control.TitledPane;
 import javafx.scene.text.Text;
 import javafx.scene.text.TextFlow;
 import javafx.stage.DirectoryChooser;
-import org.controlsfx.validation.ValidationSupport;
-import java.io.File;
-import java.io.IOException;
-import java.text.DecimalFormat;
 
 public class Controller implements DiscreenKTListener {
 
@@ -43,7 +64,7 @@ public class Controller implements DiscreenKTListener {
     @FXML
     public Label lastSyncLabel;
     @FXML
-    public ComboBox syncIntervalCombo;
+    public ComboBox<SynchronizationInterval> syncIntervalCombo;
     @FXML
     public ProgressBar progressBar;
     @FXML
@@ -55,9 +76,7 @@ public class Controller implements DiscreenKTListener {
     @FXML
     public TextFlow progressTextFlow;
 
-    private final String configPath;
-
-
+    private final URI configPath;
 
     private ConfigProvider configProvider;
     private final DiscreenKTAPI discreenKTAPI;
@@ -65,8 +84,8 @@ public class Controller implements DiscreenKTListener {
     private int maxMovieCount;
 
 
-    public Controller() {
-        this.configPath = getClass().getClassLoader().getResource("config.properties").getPath();
+    public Controller() throws URISyntaxException {
+        this.configPath = Controller.class.getClassLoader().getResource("config.properties").toURI();
 
         try {
             ConfigProvider.initConfigProvider(this.configPath);
@@ -81,8 +100,7 @@ public class Controller implements DiscreenKTListener {
 
     @FXML
     public void initialize() {
-
-        lastSyncLabel.setText("No synchronization.");
+    	setLastSyncronization();
 
         syncIntervalCombo.setItems(FXCollections.observableArrayList(SynchronizationInterval.values()));
 
@@ -152,7 +170,9 @@ public class Controller implements DiscreenKTListener {
         directoryChooser.setTitle("Choose cache destination folder!");
         File directory = directoryChooser.showDialog(button.getScene().getWindow());
 
-        textField.setText(directory.getAbsolutePath());
+        if (directory != null) {
+        	textField.setText(directory.getAbsolutePath());        	
+        }
     }
 
     private void setupValidations() {
@@ -230,7 +250,7 @@ public class Controller implements DiscreenKTListener {
             double percentage = finalNextProgress * 100;
             String progressText = new DecimalFormat("#.##").format(percentage);
             progressLabel.setText(String.valueOf(progressText + "%"));
-            appendToTextFlow("Movie: " + posterDownloadEvent.getMovieTitle() + "..." + (posterDownloadEvent.isSuccess() ? "SUCCESS" : "FAILED") + "\n", posterDownloadEvent.isSuccess() ? "-fx-fill: GREEN;" : "-fx-fill: RED;");
+            appendToTextFlow(posterDownloadEvent.getMovieTitle() + "..." + (posterDownloadEvent.isSuccess() ? "SUCCESS" : "FAILED") + "\n", posterDownloadEvent.isSuccess() ? "-fx-fill: GREEN;" : "-fx-fill: RED;");
         });
 
     }
@@ -253,6 +273,7 @@ public class Controller implements DiscreenKTListener {
             progressLabel.setText("Finished!");
 
             appendToTextFlow("Finished!", "-fx-fill: ORANGE;");
+            setLastSyncronization();
         });
     }
 
@@ -261,5 +282,19 @@ public class Controller implements DiscreenKTListener {
         txt.setText(text);
         txt.setStyle(style);
         progressTextFlow.getChildren().add(txt);
+    }
+    
+    private void setLastSyncronization() {
+    	DateTimeFormatter formatter = DateTimeFormatter.ofLocalizedDateTime( FormatStyle.SHORT )
+    		                     .withLocale( Locale.getDefault() )
+    		                     .withZone( ZoneId.systemDefault() );
+    	
+    	Optional<Instant> lastSynchronization = discreenKTAPI.getLastSynchronization();
+    	
+    	if (lastSynchronization.isPresent()) {
+    		lastSyncLabel.setText(formatter.format(lastSynchronization.get()));
+    	} else {
+    		lastSyncLabel.setText("No synchronization.");
+    	}
     }
 }

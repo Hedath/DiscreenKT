@@ -4,7 +4,8 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileWriter;
 import java.io.IOException;
-import java.text.MessageFormat;
+import java.net.URI;
+import java.nio.file.Paths;
 import java.util.Properties;
 
 /**
@@ -28,17 +29,18 @@ public class ConfigProvider {
         return instance;
     }
 
-    public static void initConfigProvider(String configFilePath) throws IOException {
+    public static void initConfigProvider(URI configFilePath) throws IOException {
         Properties config = new Properties();
-        try(FileInputStream configFileStream = new FileInputStream(configFilePath)) {
+        
+        try(FileInputStream configFileStream = new FileInputStream(Paths.get(configFilePath).toFile())) {
             config.load(configFileStream);
         }
 
         instance = new ConfigProvider(config);
     }
 
-    public void writeConfig(String configFilePath) throws IOException {
-        File file = new File(configFilePath);
+    public void writeConfig(URI configFilePath) throws IOException {
+        File file = Paths.get(configFilePath).toFile();
 
         FileWriter writer = new FileWriter(file);
 
@@ -46,9 +48,9 @@ public class ConfigProvider {
         writer.close();
     }
 
-    public Properties loadConfig(String configFilePath) throws IOException {
+    public Properties loadConfig(URI configFilePath) throws IOException {
         Properties config = new Properties();
-        try(FileInputStream configFileStream = new FileInputStream(configFilePath)) {
+        try(FileInputStream configFileStream = new FileInputStream(Paths.get(configFilePath).toFile())) {
             config.load(configFileStream);
         }
 

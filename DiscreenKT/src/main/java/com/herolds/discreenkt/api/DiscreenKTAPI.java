@@ -1,8 +1,17 @@
 package com.herolds.discreenkt.api;
 
+import java.time.Instant;
+import java.util.List;
+import java.util.Optional;
+import java.util.Properties;
+
 import com.herolds.discreenkt.api.listener.DefaultListener;
 import com.herolds.discreenkt.api.listener.DiscreenKTListener;
-import com.herolds.discreenkt.api.listener.events.*;
+import com.herolds.discreenkt.api.listener.events.BatchFinishedEvent;
+import com.herolds.discreenkt.api.listener.events.ErrorEvent;
+import com.herolds.discreenkt.api.listener.events.FinishEvent;
+import com.herolds.discreenkt.api.listener.events.PosterDownloadEvent;
+import com.herolds.discreenkt.api.listener.events.StartEvent;
 import com.herolds.discreenkt.config.ConfigProvider;
 import com.herolds.discreenkt.data.Movie;
 import com.herolds.discreenkt.service.MovieCache;
@@ -10,15 +19,13 @@ import com.herolds.discreenkt.service.MovieListParser;
 import com.herolds.discreenkt.service.MoviePosterManager;
 import com.herolds.discreenkt.service.exception.DiscreenKTException;
 
-import java.util.List;
-import java.util.Properties;
-
 /**
  * Created by herold on 2018. 01. 27..
  */
 public class DiscreenKTAPI implements DiscreenKTListener {
 
     private final DiscreenKTListener listener;
+    
     private final MoviePosterManager moviePosterManager;
 
     public DiscreenKTAPI(DiscreenKTListener listener, Properties properties) {
@@ -36,7 +43,7 @@ public class DiscreenKTAPI implements DiscreenKTListener {
         if (properties != null) {
             ConfigProvider.initConfigProvider(properties);
         }
-
+        
         try {
             MovieListParser movieListParser = new MovieListParser();
             List<Movie> movies = movieListParser.getMovieLinks(ConfigProvider.getInstance().getMovieListUrl());
@@ -49,9 +56,15 @@ public class DiscreenKTAPI implements DiscreenKTListener {
             e.printStackTrace();
             ErrorEvent event = new ErrorEvent("Internal error! Please contact support services.");
             onError(event);
-        } finally {
-            MovieCache.getInstance().close();
         }
+    }
+    
+    public Optional<Instant> getLastSynchronization() {
+    	return MovieCache.getInstance().getLastSynchronization();
+    }
+    
+    public void exit() {
+    	MovieCache.getInstance().close();
     }
 
     @Override

@@ -1,17 +1,20 @@
 package com.herolds.discreenkt;
 
+import java.io.IOException;
+
+import org.apache.commons.cli.CommandLine;
+import org.apache.commons.cli.CommandLineParser;
+import org.apache.commons.cli.DefaultParser;
+import org.apache.commons.cli.HelpFormatter;
+import org.apache.commons.cli.Option;
+import org.apache.commons.cli.Options;
+import org.apache.commons.cli.ParseException;
+
 import com.herolds.discreenkt.api.DiscreenKTAPI;
 import com.herolds.discreenkt.api.listener.DefaultListener;
 import com.herolds.discreenkt.config.ConfigProvider;
 import com.herolds.discreenkt.data.Movie;
-import com.herolds.discreenkt.service.MovieCache;
-import com.herolds.discreenkt.service.MovieListParser;
-import com.herolds.discreenkt.service.MoviePosterManager;
 import com.omertron.themoviedbapi.MovieDbException;
-import org.apache.commons.cli.*;
-
-import java.io.IOException;
-import java.util.List;
 
 /**
  * Main application.
@@ -59,6 +62,7 @@ public class Application {
         DiscreenKTAPI api = new DiscreenKTAPI(new DefaultListener(), null);
 
         api.startDownload(null);
+        api.exit();
     }
 
     private static void printMovie(Movie movie) {
