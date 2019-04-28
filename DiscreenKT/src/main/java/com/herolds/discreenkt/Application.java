@@ -63,7 +63,7 @@ public class Application {
     private static void downloadPosters() {
     	DiscreenKTAPI api = new DiscreenKTAPI();
 
-        api.startDownload(null);
+        api.startDownload();
         api.exit();
     }
 }

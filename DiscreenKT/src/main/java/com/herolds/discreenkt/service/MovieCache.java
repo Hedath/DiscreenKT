@@ -28,6 +28,11 @@ public class MovieCache {
     
     private Cache<Instant, Long> synchronizationCache;
 
+    public static void reInitialize() {
+    	instance.close();
+    	instance.initEhCache();
+    }
+    
     public static MovieCache getInstance() {
         if (instance == null) {
             instance = new MovieCache();

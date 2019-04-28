@@ -1,6 +1,7 @@
 package com.herolds.discreenkt.api;
 
 import java.time.Instant;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import java.util.Properties;
@@ -12,8 +13,10 @@ import com.herolds.discreenkt.api.listener.DefaultListener;
 import com.herolds.discreenkt.api.listener.DiscreenKTListener;
 import com.herolds.discreenkt.api.listener.events.ErrorEvent;
 import com.herolds.discreenkt.api.listener.events.FinishEvent;
+import com.herolds.discreenkt.api.listener.events.PageParseEvent;
 import com.herolds.discreenkt.api.listener.events.PosterDownloadEvent;
 import com.herolds.discreenkt.api.listener.events.StartEvent;
+import com.herolds.discreenkt.api.listener.events.StartPosterDownloadsEvent;
 import com.herolds.discreenkt.config.ConfigProvider;
 import com.herolds.discreenkt.data.Movie;
 import com.herolds.discreenkt.service.MovieCache;
@@ -52,15 +55,33 @@ public class DiscreenKTAPI implements DiscreenKTListener {
         this.moviePosterManager = new MoviePosterManager(this);
     }
 
-    public void startDownload(Properties properties) {
-        if (properties != null) {
-            ConfigProvider.initConfigProvider(properties);
-        }
-        
+    public void startDownload() {
         try {
             MovieListParser movieListParser = new MovieListParser();
-            List<Movie> movies = movieListParser.getMovieLinks(ConfigProvider.getInstance().getMovieListUrl());
-            moviePosterManager.processMovieList(movies);
+            
+            int maxPage = movieListParser.getMaxPage(ConfigProvider.getInstance().getMovieListUrl());
+            logger.info("Max pages to be downloaded: " + maxPage);
+            
+            List<Movie> movies = new ArrayList<>();
+            
+
+        	listener.onStart(StartEvent.builder()
+            		.numberOfPages(maxPage)
+            		.build());
+            
+            for(int i = 1; i <= maxPage; i++) {
+            	logger.info("Current page: " + i);
+
+            	listener.onPageParse(PageParseEvent.builder()
+            			.pageNumber(i)
+                		.build());
+            	
+            	movies.addAll(movieListParser.getMovieLinks(ConfigProvider.getInstance().getMovieListUrl() + i));
+            }
+            
+            logger.info("Processing parsed movies...");
+            
+            moviePosterManager.processMovieList(movies);	
         } catch (DiscreenKTException e) {
             onError(e.getErrorEvent());
         } catch (Exception e) {
@@ -98,4 +119,14 @@ public class DiscreenKTAPI implements DiscreenKTListener {
     public void onFinish(FinishEvent event) {
         listener.onFinish(event);
     }
+
+	@Override
+	public void onPageParse(PageParseEvent event) {
+		listener.onPageParse(event);
+	}
+
+	@Override
+	public void onStartPosterDownloads(StartPosterDownloadsEvent event) {
+		listener.onStartPosterDownloads(event);
+	}
 }

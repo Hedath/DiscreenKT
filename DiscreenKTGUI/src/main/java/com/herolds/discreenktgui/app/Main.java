@@ -4,9 +4,6 @@ import java.awt.TrayIcon;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.URL;
-import java.text.DateFormat;
-import java.text.SimpleDateFormat;
-import java.util.Timer;
 
 import javax.imageio.ImageIO;
 
@@ -14,6 +11,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.herolds.discreenkt.service.MovieCache;
+import com.herolds.discreenktgui.controller.Controller;
 
 import javafx.application.Application;
 import javafx.application.Platform;
@@ -39,12 +37,6 @@ public class Main extends Application {
     private Stage stage;
 
     private TrayIcon trayIcon;
-
-    // a timer allowing the tray icon to provide a periodic notification event.
-    private Timer notificationTimer = new Timer();
-
-    // format used to display the current time in a tray icon notification.
-    private DateFormat timeFormat = SimpleDateFormat.getTimeInstance();
 
     // sets up the javafx application.
     // a tray icon is setup for the icon, but the main stage remains invisible until the user
@@ -100,7 +92,8 @@ public class Main extends Application {
             FXMLLoader fxmlLoader = new FXMLLoader();
             InputStream inputStream = getClass().getClassLoader().getResource("DiscreenKTGUI.fxml").openStream();
             root = fxmlLoader.load(inputStream);
-            // Controller controller = fxmlLoader.getController();
+            Controller controller = fxmlLoader.getController();
+            controller.setup(stage);
         } catch (Exception e) {
             e.printStackTrace();
         }

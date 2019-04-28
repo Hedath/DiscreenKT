@@ -1,9 +1,15 @@
 package com.herolds.discreenkt.config;
 
+import java.io.File;
 import java.io.FileInputStream;
+import java.io.FileWriter;
 import java.io.IOException;
+import java.net.URI;
+import java.nio.file.Paths;
 import java.text.MessageFormat;
 import java.util.Properties;
+
+import com.herolds.discreenkt.service.MovieCache;
 
 /**
  * Singleton class for accessing application wide configurations.
@@ -28,18 +34,51 @@ public class ConfigProvider {
     public static ConfigProvider getInstance() {
         return instance;
     }
-
-    public static void initConfigProvider(String configFilePath) throws IOException {
+    
+    public static ConfigProvider initConfigProvider(String configFilePath) throws IOException {
         Properties config = new Properties();
         try(FileInputStream configFileStream = new FileInputStream(configFilePath)) {
             config.load(configFileStream);
         }
 
         instance = new ConfigProvider(config);
+        
+        return instance;
+    }
+
+    public static ConfigProvider initConfigProvider(URI configFilePath) throws IOException {
+        Properties config = new Properties();
+        try(FileInputStream configFileStream = new FileInputStream(Paths.get(configFilePath).toFile())) {
+            config.load(configFileStream);
+        }
+
+        instance = new ConfigProvider(config);
+        
+        return instance;
     }
 
     public static void initConfigProvider(Properties config) {
         instance = new ConfigProvider(config);
+    }
+    
+    public void writeConfig(URI configFilePath) throws IOException {
+        File file = Paths.get(configFilePath).toFile();
+
+        try (FileWriter writer = new FileWriter(file)) {
+        	configProperties.store(writer, "DiscreenKT config properties");        	
+        }
+        
+        MovieCache.reInitialize();
+    }
+
+    public Properties loadConfig(URI configFilePath) throws IOException {
+        Properties config = new Properties();
+       
+        try(FileInputStream configFileStream = new FileInputStream(Paths.get(configFilePath).toFile())) {
+            config.load(configFileStream);
+        }
+
+        return  config;
     }
 
     public String getMovieListUrlPattern() {
@@ -48,6 +87,10 @@ public class ConfigProvider {
 
     public String getUserUrl() {
         return getProperty(USER_URL_KEY);
+    }
+    
+    public void setUserUrl(String userUrl) {
+    	configProperties.setProperty(USER_URL_KEY, userUrl);
     }
 
     public String getMovieListUrl() {
@@ -66,8 +109,16 @@ public class ConfigProvider {
         return getProperty(POSTER_DOWNLOAD_FOLDER_KEY);
     }
 
+    public void setPosterDownloadFolder(String posterDownloadFolder) {
+    	configProperties.setProperty(POSTER_DOWNLOAD_FOLDER_KEY, posterDownloadFolder);
+    }
+
     public String getMovieCacheFolder() {
         return getProperty(MOVIE_CACHE_FOLDER_KEY);
+    }
+
+    public void setMovieCacheFolder(String movieCacheFolder) {
+        configProperties.setProperty(MOVIE_CACHE_FOLDER_KEY, movieCacheFolder);
     }
 
     private String getProperty(String key) {

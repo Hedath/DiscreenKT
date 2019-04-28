@@ -14,6 +14,7 @@ import java.util.Properties;
 public class UserSettingsProvider {
     private static final String POSTER_DOWNLOAD_FOLDER_KEY = "poster_download_folder";
     private static final String MOVIE_CACHE_FOLDER_KEY = "movie_cache_folder";
+    private static final String USER_URL_KEY = "user_url";
 
     private static UserSettingsProvider instance;
 

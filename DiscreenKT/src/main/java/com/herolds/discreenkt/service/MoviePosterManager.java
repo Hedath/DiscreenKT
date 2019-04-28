@@ -18,7 +18,7 @@ import org.slf4j.LoggerFactory;
 import com.herolds.discreenkt.api.listener.DiscreenKTListener;
 import com.herolds.discreenkt.api.listener.events.FinishEvent;
 import com.herolds.discreenkt.api.listener.events.PosterDownloadEvent;
-import com.herolds.discreenkt.api.listener.events.StartEvent;
+import com.herolds.discreenkt.api.listener.events.StartPosterDownloadsEvent;
 import com.herolds.discreenkt.config.ConfigProvider;
 import com.herolds.discreenkt.data.Movie;
 import com.herolds.discreenkt.service.exception.DiscreenKTException;
@@ -60,7 +60,7 @@ public class MoviePosterManager {
         	.filter(this::isPosterNeeded)
         	.collect(Collectors.toList());
     	
-    	listener.onStart(StartEvent.builder()
+    	listener.onStartPosterDownloads(StartPosterDownloadsEvent.builder()
         		.numberOfMovies(postersToDownload.size())
         		.build());
 
@@ -90,7 +90,8 @@ public class MoviePosterManager {
         Optional<MovieInfo> movieInfo = getMovieInfo(movie);
 
         if (movieInfo.isPresent() && movieInfo.get().getPosterPath() != null) {
-            ConfigProvider configProvider = ConfigProvider.getInstance();
+        	logger.info("Downloaded movie poster: " + movie.getTitle());
+        	ConfigProvider configProvider = ConfigProvider.getInstance();
             String baseUrl = configProvider.getMovieDBPosterBaseUrl();
             String outputPath = configProvider.getPosterDownloadFolder();
 

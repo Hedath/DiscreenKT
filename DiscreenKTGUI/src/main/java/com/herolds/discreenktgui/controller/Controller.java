@@ -12,6 +12,7 @@ import java.time.format.FormatStyle;
 import java.util.Locale;
 import java.util.Optional;
 
+import org.controlsfx.control.Notifications;
 import org.controlsfx.validation.ValidationSupport;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -20,11 +21,15 @@ import com.herolds.discreenkt.api.DiscreenKTAPI;
 import com.herolds.discreenkt.api.listener.DiscreenKTListener;
 import com.herolds.discreenkt.api.listener.events.ErrorEvent;
 import com.herolds.discreenkt.api.listener.events.FinishEvent;
+import com.herolds.discreenkt.api.listener.events.PageParseEvent;
 import com.herolds.discreenkt.api.listener.events.PosterDownloadEvent;
 import com.herolds.discreenkt.api.listener.events.StartEvent;
-import com.herolds.discreenktgui.config.UserSettingsProvider;
+import com.herolds.discreenkt.api.listener.events.StartPosterDownloadsEvent;
+import com.herolds.discreenkt.config.ConfigProvider;
+import com.herolds.discreenktgui.config.FxHelper;
 import com.herolds.discreenktgui.enums.SynchronizationInterval;
 import com.herolds.discreenktgui.validators.PathValidator;
+import com.herolds.discreenktgui.validators.UserURLValidator;
 
 import javafx.application.Platform;
 import javafx.beans.binding.Bindings;
@@ -43,256 +48,303 @@ import javafx.scene.control.TitledPane;
 import javafx.scene.text.Text;
 import javafx.scene.text.TextFlow;
 import javafx.stage.DirectoryChooser;
+import javafx.stage.Stage;
 
 public class Controller implements DiscreenKTListener {
 
 	private final Logger logger = LoggerFactory.getLogger(Controller.class);
-	
-    @FXML
-    public Button cachePathButton;
-    @FXML
-    public TextField cachePathTextField;
-    @FXML
-    public Button posterPathButton;
-    @FXML
-    public TextField posterPathTextField;
-    @FXML
-    public Button saveButton;
-    @FXML
-    public Button startButton;
-    @FXML
-    public Button resetButton;
-    @FXML
-    public Button undoButton;
-    @FXML
-    public Label lastSyncLabel;
-    @FXML
-    public ComboBox<SynchronizationInterval> syncIntervalCombo;
-    @FXML
-    public ProgressBar progressBar;
-    @FXML
-    public Label progressLabel;
-    @FXML
-    public TitledPane activityPane;
-    @FXML
-    public TextArea progressTextArea;
-    @FXML
-    public TextFlow progressTextFlow;
 
-    private final URI configPath;
+	@FXML 
+	public TextField userTextField;
+	@FXML
+	public Button cachePathButton;
+	@FXML
+	public TextField cachePathTextField;
+	@FXML
+	public Button posterPathButton;
+	@FXML
+	public TextField posterPathTextField;
+	@FXML
+	public Button saveButton;
+	@FXML
+	public Button startButton;
+	@FXML
+	public Button resetButton;
+	@FXML
+	public Button undoButton;
+	@FXML
+	public Label lastSyncLabel;
+	@FXML
+	public ComboBox<SynchronizationInterval> syncIntervalCombo;
+	@FXML
+	public ProgressBar progressBar;
+	@FXML
+	public Label progressLabel;
+	@FXML
+	public TextArea progressTextArea;
+	@FXML
+	public TextFlow progressTextFlow;
+	@FXML 
+	public TitledPane synchronizationTitledPane;
+	@FXML 
+	public TitledPane activityTitledPane;
+	@FXML 
+	public TitledPane pathsTitledPane;
 
-    private UserSettingsProvider configProvider;
-    private final DiscreenKTAPI discreenKTAPI;
+	private final URI configPath;
 
-    private int maxMovieCount;
+	private final ConfigProvider configProvider;
 
+	private final DiscreenKTAPI discreenKTAPI;
 
+	private int maxMovieCount;
 
-    public Controller() throws URISyntaxException {
-        this.configPath = Controller.class.getClassLoader().getResource("config.properties").toURI();
+	private Stage stage;
 
-        try {
-            UserSettingsProvider.initConfigProvider(this.configPath);
-            configProvider = UserSettingsProvider.getInstance();
-        } catch (IOException e) {
-            // TODO: Show error message or something
-            e.printStackTrace();
-        }
+	private FxHelper fxHelper;
 
-        this.discreenKTAPI = new DiscreenKTAPI(this, configProvider.getConfigProperties());
-    }
+	public Controller() throws URISyntaxException {
+		this.configPath = Controller.class.getClassLoader().getResource("config.properties").toURI();
+		this.fxHelper = new FxHelper();
 
-    @FXML
-    public void initialize() {
-    	setLastSyncronization();
+		try {
+			this.configProvider = ConfigProvider.initConfigProvider(this.configPath);
+		} catch (IOException e) {
+			logger.error("Cannot load config: ", e);
+			fxHelper.showExceptionDialog(e);
+			throw new RuntimeException("Could not load config.");
+		}
 
-        syncIntervalCombo.setItems(FXCollections.observableArrayList(SynchronizationInterval.values()));
+		this.discreenKTAPI = new DiscreenKTAPI(this, null);
+	}
 
-        cachePathTextField.setText(configProvider.getMovieCacheFolder());
-        posterPathTextField.setText(configProvider.getPosterDownloadFolder());
+	@FXML
+	public void initialize() {
+		setLastSyncronization();
 
-        progressBar.setProgress(0);
+		syncIntervalCombo.setItems(FXCollections.observableArrayList(SynchronizationInterval.values()));
 
-        setupValidations();
-        setupBindings();
-    }
+		userTextField.setText(configProvider.getUserUrl());
+		cachePathTextField.setText(configProvider.getMovieCacheFolder());
+		posterPathTextField.setText(configProvider.getPosterDownloadFolder());
 
-    @FXML
-    public void selectCachePath(ActionEvent actionEvent) {
-        this.selectPath(cachePathTextField, cachePathButton);
-        configProvider.setMovieCacheFolder(cachePathTextField.getText());
-    }
+		progressBar.setProgress(0);
 
-    @FXML
-    public void selectPosterPath(ActionEvent actionEvent) {
-        this.selectPath(posterPathTextField, posterPathButton);
-        configProvider.setPosterDownloadFolder(posterPathTextField.getText());
-    }
+		setupValidations();
+		setupBindings();
 
-    @FXML
-    public void saveConfig(ActionEvent actionEvent) {
-        try {
-            configProvider.writeConfig(configPath);
-        } catch (IOException e) {
-            // TODO: Show error message or something
-            e.printStackTrace();
-        }
+		synchronizationTitledPane.heightProperty().addListener((obs, oldHeight, newHeight) -> stage.sizeToScene());
+		activityTitledPane.heightProperty().addListener((obs, oldHeight, newHeight) -> stage.sizeToScene());
+		pathsTitledPane.heightProperty().addListener((obs, oldHeight, newHeight) -> stage.sizeToScene());
+	}
 
-    }
+	@FXML
+	public void selectCachePath(ActionEvent actionEvent) {
+		this.selectPath(cachePathTextField, cachePathButton);
+		configProvider.setMovieCacheFolder(cachePathTextField.getText());
+	}
 
-    @FXML
-    public void undoConfig(ActionEvent actionEvent) {
-        try {
-            configProvider.loadConfig(configPath);
-        } catch (IOException e) {
-            // TODO: Show error message or something
-            e.printStackTrace();
-        }
+	@FXML
+	public void selectPosterPath(ActionEvent actionEvent) {
+		this.selectPath(posterPathTextField, posterPathButton);
+		configProvider.setPosterDownloadFolder(posterPathTextField.getText());
+	}
 
-        cachePathTextField.setText(configProvider.getMovieCacheFolder());
-        posterPathTextField.setText(configProvider.getPosterDownloadFolder());
-    }
+	@FXML
+	public void saveConfig(ActionEvent actionEvent) {
+		configProvider.setMovieCacheFolder(cachePathTextField.getText());
+		configProvider.setPosterDownloadFolder(posterPathTextField.getText());
+		configProvider.setUserUrl(userTextField.getText());
 
-    @FXML
-    public void startDiscreenKT(ActionEvent actionEvent) {
-        Task<Void> task = new Task<Void>() {
-            @Override
-            protected Void call() throws Exception {
-                discreenKTAPI.startDownload(configProvider.getConfigProperties());
-                return null;
-            }
-        };
+		try {
+			configProvider.writeConfig(configPath);
+		} catch (IOException e) {
+			logger.error("Cannot save config: ", e);
+			fxHelper.showExceptionDialog(e);
+		}
+	}
 
-        Thread th = new Thread(task);
-        th.setDaemon(true);
-        th.start();
-    }
+	@FXML
+	public void undoConfig(ActionEvent actionEvent) {
+		try {
+			configProvider.loadConfig(configPath);
+		} catch (IOException e) {
+			logger.error("Cannot load config: ", e);
+			fxHelper.showExceptionDialog(e);
+		}
 
-    private void selectPath(TextField textField, Button button) {
-        DirectoryChooser directoryChooser = new DirectoryChooser();
+		cachePathTextField.setText(configProvider.getMovieCacheFolder());
+		posterPathTextField.setText(configProvider.getPosterDownloadFolder());
+		userTextField.setText(configProvider.getUserUrl());
+	}
 
-        directoryChooser.setTitle("Choose cache destination folder!");
-        File directory = directoryChooser.showDialog(button.getScene().getWindow());
+	@FXML
+	public void startDiscreenKT(ActionEvent actionEvent) {
+		Task<Void> task = new Task<Void>() {
+			@Override
+			protected Void call() throws Exception {
+				discreenKTAPI.startDownload();
+				return null;
+			}
+		};
 
-        if (directory != null) {
-        	textField.setText(directory.getAbsolutePath());        	
-        }
-    }
+		Thread th = new Thread(task);
+		th.setDaemon(true);
+		th.start();
+	}
 
-    private void setupValidations() {
-        ValidationSupport support = new ValidationSupport();
+	public void setup(Stage stage) {
+		this.stage = stage;
+	}
 
-        PathValidator pathValidator = new PathValidator();
+	private void selectPath(TextField textField, Button button) {
+		DirectoryChooser directoryChooser = new DirectoryChooser();
 
-        support.registerValidator(cachePathTextField, true, pathValidator);
-        support.registerValidator(posterPathTextField, true, pathValidator);
+		directoryChooser.setTitle("Choose cache destination folder!");
+		File directory = directoryChooser.showDialog(button.getScene().getWindow());
 
-        support.setErrorDecorationEnabled(true);
-        support.redecorate();
-    }
+		if (directory != null) {
+			textField.setText(directory.getAbsolutePath());        	
+		}
+	}
 
-    private void setupBindings() {
-        PathValidator pathValidator = new PathValidator();
+	private void setupValidations() {
+		ValidationSupport support = new ValidationSupport();
 
+		PathValidator pathValidator = new PathValidator();
 
-        // Binding to the cache path text property to check whether it's an invalid (non existent) path
-        BooleanBinding cachePathTextFieldInvalid = Bindings.createBooleanBinding(() -> pathValidator.validate(cachePathTextField.getText()), cachePathTextField.textProperty());
-        // Binding to the poster path text property to check whether it's an invalid (non existent) path
-        BooleanBinding posterPathTextFieldInvalid = Bindings.createBooleanBinding(() -> pathValidator.validate(posterPathTextField.getText()), posterPathTextField.textProperty());
-        // Binding to the cache path text property to check whether it's been unmodified
-        BooleanBinding cachePathTextFieldUnmodified = Bindings.createBooleanBinding(()-> cachePathTextField.getText().equals(configProvider.getMovieCacheFolder()), cachePathTextField.textProperty());
-        // Binding to the poster path text property to check whether it's been unmodified
-        BooleanBinding posterPathTextFieldUnmodified = Bindings.createBooleanBinding(()-> posterPathTextField.getText().equals(configProvider.getPosterDownloadFolder()), posterPathTextField.textProperty());
+		support.registerValidator(cachePathTextField, true, pathValidator);
+		support.registerValidator(posterPathTextField, true, pathValidator);
 
-        // The paths are unmodified, if both of them are unmodified
-        final BooleanBinding unmodifiedPathsBooleanBinding = cachePathTextFieldUnmodified.and(posterPathTextFieldUnmodified);
-        // The paths are invalid, if one of them is invalid
-        final BooleanBinding invalidPathsBooleanBinding = cachePathTextFieldInvalid.or(posterPathTextFieldInvalid);
+		support.registerValidator(userTextField, true, new UserURLValidator());
 
-        // Save button is disabled when the paths are unmodified, or one of the paths is invalid.
-        saveButton.disableProperty().bind(unmodifiedPathsBooleanBinding.or(invalidPathsBooleanBinding));
-        // Undo button is disabled when the paths are unmodified.
-        undoButton.disableProperty().bind(unmodifiedPathsBooleanBinding);
-        // Start button is disabled when one of the paths is invalid.
-        startButton.disableProperty().bind(invalidPathsBooleanBinding);
-        // Reset button is disabled when one of the paths is invalid.
-        
-        // resetButton.disableProperty().bind(invalidPathsBooleanBinding);
-    }
+		support.setErrorDecorationEnabled(true);
+		support.redecorate();
+	}
 
-    @Override
-    public void onStart(StartEvent startEvent) {
-    	logger.info("Starting downloads: {}", startEvent.getNumberOfMovies());
+	private void setupBindings() {
+		PathValidator pathValidator = new PathValidator();
 
-        maxMovieCount = startEvent.getNumberOfMovies();
+		// Binding to the cache path text property to check whether it's an invalid (non existent) path
+		BooleanBinding cachePathTextFieldInvalid = Bindings.createBooleanBinding(() -> pathValidator.validate(cachePathTextField.getText()), cachePathTextField.textProperty());
+		// Binding to the poster path text property to check whether it's an invalid (non existent) path
+		BooleanBinding posterPathTextFieldInvalid = Bindings.createBooleanBinding(() -> pathValidator.validate(posterPathTextField.getText()), posterPathTextField.textProperty());
+		// Binding to the cache path text property to check whether it's been unmodified
+		BooleanBinding cachePathTextFieldUnmodified = Bindings.createBooleanBinding(()-> cachePathTextField.getText().equals(configProvider.getMovieCacheFolder()), cachePathTextField.textProperty());
+		// Binding to the poster path text property to check whether it's been unmodified
+		BooleanBinding posterPathTextFieldUnmodified = Bindings.createBooleanBinding(()-> posterPathTextField.getText().equals(configProvider.getPosterDownloadFolder()), posterPathTextField.textProperty());
 
-        Platform.runLater(() -> {
-            progressBar.setProgress(0);
-            progressLabel.setText("");
+		UserURLValidator userURLValidator = new UserURLValidator();
+		final BooleanBinding userTextFieldInvalid = Bindings.createBooleanBinding(() -> userURLValidator.validate(userTextField.getText()), userTextField.textProperty());
+		final BooleanBinding userTextFieldUnmodified = Bindings.createBooleanBinding(()-> userTextField.getText().equals(configProvider.getUserUrl()), userTextField.textProperty());
 
-            progressTextFlow.getChildren().clear();
-            appendToTextFlow("Started!\n", "-fx-fill: ORANGE;");
-        });
-    }
+		// The paths are unmodified, if both of them are unmodified
+		final BooleanBinding unmodifiedPathsBooleanBinding = cachePathTextFieldUnmodified.and(posterPathTextFieldUnmodified).and(userTextFieldUnmodified);
+		// The paths are invalid, if one of them is invalid
+		final BooleanBinding invalidPathsBooleanBinding = cachePathTextFieldInvalid.or(posterPathTextFieldInvalid);
 
-    @Override
-    public void onPosterDownload(PosterDownloadEvent posterDownloadEvent) {
-    	logger.info("Downloading poster: {}", posterDownloadEvent.getMovieTitle());
+		// Save button is disabled when the paths are unmodified, or one of the paths is invalid.
+		saveButton.disableProperty().bind(unmodifiedPathsBooleanBinding.or(invalidPathsBooleanBinding).or(userTextFieldInvalid));
+		// Undo button is disabled when the paths are unmodified.
+		undoButton.disableProperty().bind(unmodifiedPathsBooleanBinding);
+		// Start button is disabled when one of the paths is invalid.
+		startButton.disableProperty().bind(invalidPathsBooleanBinding.or(userTextFieldInvalid));
 
-        final double progress = progressBar.getProgress();
+		// Reset button is disabled when one of the paths is invalid.
+		// resetButton.disableProperty().bind(invalidPathsBooleanBinding);
+	}
 
-        double nextProgress = progress + 1.0 / maxMovieCount;
+	@Override
+	public void onStart(StartEvent startEvent) {
+		Platform.runLater(() -> {
+			progressBar.setProgress(0);
+			progressLabel.setText("");
 
-        final double finalNextProgress = nextProgress > 1.0 ? 1 : nextProgress;
-        progressBar.setProgress(finalNextProgress);
-        
-        Platform.runLater(() -> {
-            double percentage = nextProgress * 100;
-            String progressText = new DecimalFormat("#.##").format(percentage);
-            progressLabel.setText(String.valueOf(progressText + "%"));
-            appendToTextFlow(posterDownloadEvent.getMovieTitle() + "..." + (posterDownloadEvent.isSuccess() ? "SUCCESS" : posterDownloadEvent.getMessage()) + "\n", posterDownloadEvent.isSuccess() ? "-fx-fill: GREEN;" : "-fx-fill: RED;");
-        });
+			progressTextFlow.getChildren().clear();
+			appendToTextFlow("Started parsing KT pages!\n", fxHelper.fillColor("ORANGE"));
+		});
+	}
 
-    }
+	@Override
+	public void onPosterDownload(PosterDownloadEvent posterDownloadEvent) {
+		logger.info("Downloading poster: {}", posterDownloadEvent.getMovieTitle());
 
-    @Override
-    public void onError(ErrorEvent errorEvent) {
-    	logger.warn("Error during poster synchronization: {}", errorEvent.getMessage());
-    }
+		final double progress = progressBar.getProgress();
 
-    @Override
-    public void onFinish(FinishEvent finishEvent) {
-        logger.info("Finished poster synchronization");
+		double nextProgress = progress + 1.0 / maxMovieCount;
 
-        Platform.runLater(() -> {
-            progressBar.setProgress(1);
-            progressLabel.setText("Finished!");
+		final double finalNextProgress = nextProgress > 1.0 ? 1 : nextProgress;
+		progressBar.setProgress(finalNextProgress);
 
-            appendToTextFlow("Finished!", "-fx-fill: ORANGE;");
-            
-            setLastSyncronization();
-        });
-    }
+		Platform.runLater(() -> {
+			double percentage = nextProgress * 100;
+			String progressText = new DecimalFormat("#.##").format(percentage);
+			progressLabel.setText(String.valueOf(progressText + "%"));
+			appendToTextFlow(posterDownloadEvent.getMovieTitle() + "..." + (posterDownloadEvent.isSuccess() ? "SUCCESS" : posterDownloadEvent.getMessage()) + "\n", posterDownloadEvent.isSuccess() ? fxHelper.fillColor("GREEN") : fxHelper.fillColor("RED"));
+		});
 
-    private void appendToTextFlow(String text, String style) {
-        Text txt = new Text();
-        txt.setText(text);
-        txt.setStyle(style);
-        
-        progressTextFlow.getChildren().add(txt);
-    }
-    
-    private void setLastSyncronization() {
-    	DateTimeFormatter formatter = DateTimeFormatter.ofLocalizedDateTime(FormatStyle.SHORT)
-    		                     .withLocale(Locale.getDefault())
-    		                     .withZone(ZoneId.systemDefault());
-    	
-    	Optional<Instant> lastSynchronization = discreenKTAPI.getLastSynchronization();
-    	
-    	if (lastSynchronization.isPresent()) {
-    		lastSyncLabel.setText(formatter.format(lastSynchronization.get()));
-    	} else {
-    		lastSyncLabel.setText("No synchronization.");
-    	}
-    }
+	}
+
+	@Override
+	public void onError(ErrorEvent errorEvent) {
+		logger.warn("Error during poster synchronization: {}", errorEvent.getMessage());
+		fxHelper.showErrorDialog(errorEvent.getMessage());
+	}
+
+	@Override
+	public void onFinish(FinishEvent finishEvent) {
+		logger.info("Finished poster synchronization");
+
+		Platform.runLater(() -> {
+			progressBar.setProgress(1);
+			progressLabel.setText("Finished!");
+
+			appendToTextFlow("Finished!", fxHelper.fillColor("ORANGE"));
+
+			setLastSyncronization();
+
+			Notifications.create()
+				.title("DiscreenKT")
+				.text("Finished poster synchronization")
+				.showInformation();
+
+		});
+	}
+
+	private void appendToTextFlow(String text, String style) {
+		Text txt = new Text();
+		txt.setText(text);
+		txt.setStyle(style);
+
+		progressTextFlow.getChildren().add(txt);
+	}
+
+	private void setLastSyncronization() {
+		DateTimeFormatter formatter = DateTimeFormatter.ofLocalizedDateTime(FormatStyle.SHORT)
+				.withLocale(Locale.getDefault())
+				.withZone(ZoneId.systemDefault());
+
+		Optional<Instant> lastSynchronization = discreenKTAPI.getLastSynchronization();
+
+		if (lastSynchronization.isPresent()) {
+			lastSyncLabel.setText(formatter.format(lastSynchronization.get()));
+		} else {
+			lastSyncLabel.setText("No synchronization.");
+		}
+	}
+
+	@Override
+	public void onPageParse(PageParseEvent event) {
+		appendToTextFlow("Parsed page: " + event.getPageNumber(), fxHelper.fillColor("ORANGE"));
+	}
+
+	@Override
+	public void onStartPosterDownloads(StartPosterDownloadsEvent event) {
+		// TODO Auto-generated method stub
+		logger.info("Starting downloads: {}", event.getNumberOfMovies());
+
+		maxMovieCount = event.getNumberOfMovies();
+
+		appendToTextFlow("Started poster downloads!\n", fxHelper.fillColor("ORANGE"));
+	}
 }

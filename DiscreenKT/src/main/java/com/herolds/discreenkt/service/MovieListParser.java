@@ -19,6 +19,19 @@ import com.herolds.discreenkt.data.MovieFactory;
  * Herold on 2017.07.15.
  */
 public class MovieListParser {
+	
+	public int getMaxPage(String movieListUrl) throws IOException {
+		Document document = Jsoup.connect(movieListUrl).get();
+		
+		Elements paging = document.select("ul.paging>li:last-child");
+		
+		for(Element page : paging) {
+			return Integer.parseInt(page.text());
+		}
+		
+		return 0;
+	}
+	
 	public List<Movie> getMovieLinks(String movieListUrl) throws IOException {
 		List<Movie> movies = new ArrayList<>();
 
