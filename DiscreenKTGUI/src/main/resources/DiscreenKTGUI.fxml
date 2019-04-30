@@ -120,6 +120,16 @@
 					<Tooltip text="Start downloading posters" />
 				</tooltip>
 			</Button>
+			
+			<Button fx:id="stopButton" text="Stop" disable="true"
+				onAction="#stopDiscreenKT">
+				<graphic>
+					<Glyph fontFamily="FontAwesome" icon="stop" />
+				</graphic>
+				<tooltip>
+					<Tooltip text="Stop downloading posters" />
+				</tooltip>
+			</Button>
 
 			<Button fx:id="resetButton" text="Reset" disable="true">
 				<graphic>

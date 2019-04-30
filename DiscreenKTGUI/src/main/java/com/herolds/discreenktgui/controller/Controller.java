@@ -26,6 +26,7 @@ import com.herolds.discreenkt.api.listener.events.PosterDownloadEvent;
 import com.herolds.discreenkt.api.listener.events.StartEvent;
 import com.herolds.discreenkt.api.listener.events.StartPosterDownloadsEvent;
 import com.herolds.discreenkt.config.ConfigProvider;
+import com.herolds.discreenkt.service.exception.DiscreenKTException;
 import com.herolds.discreenktgui.config.FxHelper;
 import com.herolds.discreenktgui.enums.SynchronizationInterval;
 import com.herolds.discreenktgui.validators.PathValidator;
@@ -90,6 +91,8 @@ public class Controller implements DiscreenKTListener {
 	public TitledPane activityTitledPane;
 	@FXML 
 	public TitledPane pathsTitledPane;
+	@FXML 
+	public Button stopButton;
 
 	private final URI configPath;
 
@@ -107,13 +110,7 @@ public class Controller implements DiscreenKTListener {
 		this.configPath = Controller.class.getClassLoader().getResource("config.properties").toURI();
 		this.fxHelper = new FxHelper();
 
-		try {
-			this.configProvider = ConfigProvider.initConfigProvider(this.configPath);
-		} catch (IOException e) {
-			logger.error("Cannot load config: ", e);
-			fxHelper.showExceptionDialog(e);
-			throw new RuntimeException("Could not load config.");
-		}
+		this.configProvider = ConfigProvider.initConfigProvider();
 
 		this.discreenKTAPI = new DiscreenKTAPI(this, null);
 	}
@@ -191,6 +188,9 @@ public class Controller implements DiscreenKTListener {
 		Thread th = new Thread(task);
 		th.setDaemon(true);
 		th.start();
+		
+		// startButton.setDisable(true);
+		stopButton.setDisable(false);
 	}
 
 	public void setup(Stage stage) {
@@ -309,6 +309,9 @@ public class Controller implements DiscreenKTListener {
 				.showInformation();
 
 		});
+		
+		// startButton.setDisable(false);
+		stopButton.setDisable(true);
 	}
 
 	private void appendToTextFlow(String text, String style) {
@@ -335,7 +338,9 @@ public class Controller implements DiscreenKTListener {
 
 	@Override
 	public void onPageParse(PageParseEvent event) {
-		appendToTextFlow("Parsed page: " + event.getPageNumber(), fxHelper.fillColor("ORANGE"));
+		Platform.runLater(() -> {
+			appendToTextFlow("Parsed page: " + event.getPageNumber() + "\n", fxHelper.fillColor("ORANGE"));
+		});
 	}
 
 	@Override
@@ -344,7 +349,13 @@ public class Controller implements DiscreenKTListener {
 		logger.info("Starting downloads: {}", event.getNumberOfMovies());
 
 		maxMovieCount = event.getNumberOfMovies();
+		Platform.runLater(() -> {
+			appendToTextFlow("Started poster downloads!\n", fxHelper.fillColor("ORANGE"));
+		});
+	}
 
-		appendToTextFlow("Started poster downloads!\n", fxHelper.fillColor("ORANGE"));
+	@FXML 
+	public void stopDiscreenKT(ActionEvent event) throws DiscreenKTException {
+		
 	}
 }

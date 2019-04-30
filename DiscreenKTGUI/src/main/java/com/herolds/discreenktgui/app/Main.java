@@ -19,6 +19,8 @@ import javafx.fxml.FXMLLoader;
 import javafx.scene.Node;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
+import javafx.scene.control.Alert;
+import javafx.scene.control.Alert.AlertType;
 import javafx.scene.layout.BorderPane;
 import javafx.stage.Stage;
 
@@ -45,6 +47,17 @@ public class Main extends Application {
     public void start(final Stage stage) throws IOException {
         // stores a reference to the stage.
         this.stage = stage;
+        
+        Thread.currentThread().setUncaughtExceptionHandler((thread, throwable) -> {
+            logger.error("Unexpected exception: ", throwable);
+            
+        	Alert alert = new Alert(AlertType.ERROR);
+    		alert.setTitle("Error happened!");
+    		alert.setHeaderText("Look, an Error Dialog");
+    		alert.setContentText("Ooops, there was an error!");
+
+    		alert.showAndWait();
+        });
 
         // instructs the javafx system not to exit implicitly when the last application window is shut.
         Platform.setImplicitExit(false);
