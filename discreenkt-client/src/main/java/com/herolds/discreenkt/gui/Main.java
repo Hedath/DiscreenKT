@@ -33,7 +33,7 @@ public class Main extends Application {
 	
     // one icon location is shared between the application tray icon and task bar icon.
     // you could also use multiple icons to allow for clean display of tray icons on hi-dpi devices.
-    private static final URL iconImageLoc = Main.class.getClassLoader().getResource("icon.png");
+    private static final URL iconImageLoc = Main.class.getClassLoader().getResource("gui/icon.png");
 
     // application stage is stored so that it can be shown and hidden based on system tray icon operations.
     private Stage stage;
@@ -103,7 +103,7 @@ public class Main extends Application {
 
         try {
             FXMLLoader fxmlLoader = new FXMLLoader();
-            InputStream inputStream = getClass().getClassLoader().getResource("DiscreenKTGUI.fxml").openStream();
+            InputStream inputStream = getClass().getClassLoader().getResource("gui/DiscreenKTGUI.fxml").openStream();
             root = fxmlLoader.load(inputStream);
             Controller controller = fxmlLoader.getController();
             controller.setup(stage);

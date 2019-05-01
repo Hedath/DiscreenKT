@@ -345,7 +345,6 @@ public class Controller implements DiscreenKTListener {
 
 	@Override
 	public void onStartPosterDownloads(StartPosterDownloadsEvent event) {
-		// TODO Auto-generated method stub
 		logger.info("Starting downloads: {}", event.getNumberOfMovies());
 
 		maxMovieCount = event.getNumberOfMovies();
