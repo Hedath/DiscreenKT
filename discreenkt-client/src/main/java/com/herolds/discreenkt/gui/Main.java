@@ -184,7 +184,12 @@ public class Main extends Application {
      * Shows the application stage and ensures that it is brought ot the front of all stages.
      */
     private void showStage() {
-        if (stage != null) {
+        if (stage != null) {        	
+        	stage.setOnShowing((event) -> {
+        		stage.setX(stage.getX()); 
+        		stage.setY(stage.getY());	
+        	});
+        	
             stage.show();
             stage.toFront();
         }

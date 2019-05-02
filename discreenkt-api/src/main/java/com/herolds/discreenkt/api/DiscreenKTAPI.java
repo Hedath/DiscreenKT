@@ -37,7 +37,11 @@ public class DiscreenKTAPI implements DiscreenKTListener {
 
     public DiscreenKTAPI() {        
         this.listener = new DefaultListener();
-    	
+    	this.moviePosterManager = new MoviePosterManager(this);
+    }
+    
+    public DiscreenKTAPI(DiscreenKTListener listener) {
+    	this.listener = listener;
     	this.moviePosterManager = new MoviePosterManager(this);
     }
     

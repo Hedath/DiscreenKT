@@ -12,6 +12,8 @@ import org.ehcache.config.builders.CacheManagerBuilder;
 import org.ehcache.config.builders.ResourcePoolsBuilder;
 import org.ehcache.config.units.EntryUnit;
 import org.ehcache.config.units.MemoryUnit;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.herolds.discreenkt.api.config.ConfigProvider;
 import com.herolds.discreenkt.api.data.Movie;
@@ -21,6 +23,8 @@ import com.herolds.discreenkt.api.data.Movie;
  */
 public class MovieCache {
 
+	private final Logger logger = LoggerFactory.getLogger(MovieCache.class);
+	
     private static MovieCache instance;
 
     private PersistentCacheManager persistentCacheManager;
@@ -47,6 +51,7 @@ public class MovieCache {
 
     private void initEhCache() {
         String cacheLocation = ConfigProvider.getInstance().getMovieCacheFolder();
+        logger.info("Cache location: {}", cacheLocation);
 
         persistentCacheManager = CacheManagerBuilder.newCacheManagerBuilder()
                 .with(CacheManagerBuilder.persistence(cacheLocation))
@@ -67,7 +72,7 @@ public class MovieCache {
                         )
                 )
                 .build(true);
-
+        
         cache = persistentCacheManager.getCache("movieCache", Integer.class, Movie.class);
         synchronizationCache = persistentCacheManager.getCache("synchronizationCache", Instant.class, Long.class);
     }

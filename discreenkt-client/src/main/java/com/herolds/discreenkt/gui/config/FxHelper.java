@@ -3,6 +3,11 @@ package com.herolds.discreenkt.gui.config;
 import java.io.PrintWriter;
 import java.io.StringWriter;
 
+import com.herolds.discreenkt.gui.validators.DiscreenKTValidator;
+
+import javafx.beans.binding.Bindings;
+import javafx.beans.binding.BooleanBinding;
+import javafx.beans.property.StringProperty;
 import javafx.scene.control.Alert;
 import javafx.scene.control.Alert.AlertType;
 import javafx.scene.control.Label;
@@ -14,6 +19,14 @@ public class FxHelper {
 
 	public String fillColor(String color) {
 		return String.format("-fx-fill: %s;", color);
+	}
+	
+	public BooleanBinding createValidationBinding(DiscreenKTValidator<String> validator, StringProperty stringProperty) {
+		return Bindings.createBooleanBinding(() -> validator.validate(stringProperty.getValue()), stringProperty);
+	}
+	
+	public BooleanBinding createEqualsBinding(String value, StringProperty stringProperty) {
+		return Bindings.createBooleanBinding(() -> stringProperty.getValue().equals(value) , stringProperty); 
 	}
 
 	public void showErrorDialog(String message) {

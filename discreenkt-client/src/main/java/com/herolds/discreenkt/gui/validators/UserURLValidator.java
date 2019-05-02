@@ -4,11 +4,10 @@ import java.util.regex.Pattern;
 
 import org.controlsfx.validation.Severity;
 import org.controlsfx.validation.ValidationResult;
-import org.controlsfx.validation.Validator;
 
 import javafx.scene.control.Control;
 
-public class UserURLValidator implements Validator<String> {
+public class UserURLValidator implements DiscreenKTValidator<String> {
 
 	private static final String USER_URL_REGEX = "\\d+\\/.+";
 	
@@ -17,6 +16,7 @@ public class UserURLValidator implements Validator<String> {
         return ValidationResult.fromMessageIf( control, "Wrong URL part syntax! Should be: ID/username", Severity.ERROR, validate(value));
     }
 
+    @Override
     public boolean validate(String value) {
         return value == null || !Pattern.matches(USER_URL_REGEX, value);
     }

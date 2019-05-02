@@ -10,6 +10,7 @@ import java.nio.file.Paths;
 import java.text.MessageFormat;
 import java.util.Properties;
 
+import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -27,6 +28,8 @@ public class ConfigProvider {
 	private static final String MOVIEDB_POSTER_BASE_URL_KEY = "moviedb_poster_base_url";
 	private static final String POSTER_DOWNLOAD_FOLDER_KEY = "poster_download_folder";
 	private static final String MOVIE_CACHE_FOLDER_KEY = "movie_cache_folder";
+	private static final String SYNC_INTERVAL = "sync_interval";
+	private static final String SYNC_TIME = "sync_time";
 
 	private static final String CONFIG_PROPERTIES_FILE = "config.properties";
 
@@ -35,9 +38,12 @@ public class ConfigProvider {
 	private static ConfigProvider instance;
 
 	private final Properties configProperties;
+	
+	private final String defaultCacheFolder;
 
 	private ConfigProvider(Properties configProperties) {
 		this.configProperties = configProperties;
+		this.defaultCacheFolder = getTempFolderPath();
 	}
 
 	public static ConfigProvider getInstance() {
@@ -130,14 +136,57 @@ public class ConfigProvider {
 	}
 
 	public String getMovieCacheFolder() {
-		return getProperty(MOVIE_CACHE_FOLDER_KEY);
+		String movieCacheFolder = getProperty(MOVIE_CACHE_FOLDER_KEY); 
+		
+		if (StringUtils.isEmpty(movieCacheFolder)) {
+			return defaultCacheFolder;
+		} else {
+			return movieCacheFolder;			
+		}
 	}
 
 	public void setMovieCacheFolder(String movieCacheFolder) {
 		configProperties.setProperty(MOVIE_CACHE_FOLDER_KEY, movieCacheFolder);
 	}
+	
+	public String getSyncInterval() {
+		return getProperty(SYNC_INTERVAL);
+	}
+	
+	public void setSyncInterval(String syncInterval) {
+		configProperties.setProperty(SYNC_INTERVAL, syncInterval);
+	}
+	
+	public String getSyncTime() {
+		return getProperty(SYNC_TIME);
+	}
+	
+	public void setSyncTime(String syncTime) {
+		configProperties.setProperty(SYNC_TIME, syncTime);
+	}
 
 	private String getProperty(String key) {
 		return configProperties.getProperty(key);
+	}
+	
+	private String getTempFolderPath() {
+		String cacheLocation = "DiscreenKT" + File.separator + "cache";
+    	
+    	try {
+			File tempFile = File.createTempFile("discreenkt", ".tmp");
+			
+			String tempFileAbsolutePath = tempFile.getAbsolutePath();
+    		String tempFolderPath = tempFileAbsolutePath.substring(0, tempFileAbsolutePath.lastIndexOf(File.separator));
+    		
+    		cacheLocation = tempFolderPath.concat(File.separator).concat(cacheLocation);
+    		
+    		tempFile.delete();
+		} catch (IOException | SecurityException e) {
+			logger.error("Failed to get temp folder: ", e);
+			
+			cacheLocation = new File(cacheLocation).getAbsolutePath();
+		}
+    	
+    	return cacheLocation;
 	}
 }
