@@ -21,31 +21,26 @@ import com.herolds.discreenkt.api.data.Movie;
 /**
  * @author bence
  */
-public class MovieCache {
+public class DiscreenKTCache {
 
-	private final Logger logger = LoggerFactory.getLogger(MovieCache.class);
+	private final Logger logger = LoggerFactory.getLogger(DiscreenKTCache.class);
 	
-    private static MovieCache instance;
+    private static DiscreenKTCache instance;
 
     private PersistentCacheManager persistentCacheManager;
     private Cache<Integer, Movie> cache;
     
     private Cache<Instant, Long> synchronizationCache;
-
-    public static void reInitialize() {
-    	instance.close();
-    	instance.initEhCache();
-    }
     
-    public static MovieCache getInstance() {
+    public static DiscreenKTCache getInstance() {
         if (instance == null) {
-            instance = new MovieCache();
+            instance = new DiscreenKTCache();
         }
         
         return instance;
     }
 
-    private MovieCache() {
+    private DiscreenKTCache() {
         initEhCache();
     }
 

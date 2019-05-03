@@ -19,7 +19,7 @@ import com.herolds.discreenkt.api.listener.events.PageParseEvent;
 import com.herolds.discreenkt.api.listener.events.PosterDownloadEvent;
 import com.herolds.discreenkt.api.listener.events.StartEvent;
 import com.herolds.discreenkt.api.listener.events.StartPosterDownloadsEvent;
-import com.herolds.discreenkt.api.service.MovieCache;
+import com.herolds.discreenkt.api.service.DiscreenKTCache;
 import com.herolds.discreenkt.api.service.MovieListParser;
 import com.herolds.discreenkt.api.service.MoviePosterManager;
 import com.herolds.discreenkt.api.service.exception.DiscreenKTException;
@@ -97,11 +97,11 @@ public class DiscreenKTAPI implements DiscreenKTListener {
     }
     
     public Optional<Instant> getLastSynchronization() {
-    	return MovieCache.getInstance().getLastSynchronization();
+    	return DiscreenKTCache.getInstance().getLastSynchronization();
     }
     
     public void exit() {
-    	MovieCache.getInstance().close();
+    	DiscreenKTCache.getInstance().close();
     }
 
     @Override

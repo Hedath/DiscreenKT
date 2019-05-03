@@ -7,11 +7,13 @@ import java.net.URL;
 
 import javax.imageio.ImageIO;
 
+import org.quartz.SchedulerException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.herolds.discreenkt.api.service.MovieCache;
+import com.herolds.discreenkt.api.service.DiscreenKTCache;
 import com.herolds.discreenkt.gui.controller.Controller;
+import com.herolds.discreenkt.gui.scheduler.PosterDownloadScheduler;
 
 import javafx.application.Application;
 import javafx.application.Platform;
@@ -37,6 +39,8 @@ public class Main extends Application {
 
     // application stage is stored so that it can be shown and hidden based on system tray icon operations.
     private Stage stage;
+    
+    private PosterDownloadScheduler scheduler;
 
     private TrayIcon trayIcon;
 
@@ -44,7 +48,7 @@ public class Main extends Application {
     // a tray icon is setup for the icon, but the main stage remains invisible until the user
     // interacts with the tray icon.
     @Override 
-    public void start(final Stage stage) throws IOException {
+    public void start(final Stage stage) throws IOException, SchedulerException {
         // stores a reference to the stage.
         this.stage = stage;
         
@@ -89,6 +93,15 @@ public class Main extends Application {
 
         stage.setResizable(false);
         stage.setScene(scene);
+        
+        scheduler = PosterDownloadScheduler.getInstance();
+    }
+    
+    @Override
+    public void stop() throws Exception {
+    	super.stop();
+
+		scheduler.close();    		
     }
 
     /**
@@ -106,6 +119,7 @@ public class Main extends Application {
             InputStream inputStream = getClass().getClassLoader().getResource("gui/DiscreenKTGUI.fxml").openStream();
             root = fxmlLoader.load(inputStream);
             Controller controller = fxmlLoader.getController();
+            
             controller.setup(stage);
         } catch (Exception e) {
             e.printStackTrace();
@@ -161,7 +175,7 @@ public class Main extends Application {
             exitItem.addActionListener(event -> {
                 Platform.exit();
                 tray.remove(trayIcon);
-                MovieCache.getInstance().close();
+                DiscreenKTCache.getInstance().close();
                 System.exit(0);
             });
 

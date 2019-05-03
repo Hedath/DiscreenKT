@@ -40,7 +40,7 @@ public class MoviePosterManager {
 	private final Logger logger = LoggerFactory.getLogger(MoviePosterManager.class);
 	
     private TmdbSearch tmdbSearch;
-    private MovieCache movieCache;
+    private DiscreenKTCache movieCache;
 
     private final DiscreenKTListener listener;
 
@@ -52,7 +52,7 @@ public class MoviePosterManager {
         HttpClient httpClient = HttpClientBuilder.create().build();
         this.tmdbSearch = new TmdbSearch(apiKey, new HttpTools(httpClient));
 
-        movieCache = MovieCache.getInstance();
+        movieCache = DiscreenKTCache.getInstance();
     }
 
     public void processMovieList(List<Movie> movies) throws DiscreenKTException {

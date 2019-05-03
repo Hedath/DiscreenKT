@@ -16,6 +16,7 @@ import java.util.Locale;
 import java.util.Optional;
 
 import org.controlsfx.validation.ValidationSupport;
+import org.quartz.SchedulerException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -31,6 +32,7 @@ import com.herolds.discreenkt.api.listener.events.StartPosterDownloadsEvent;
 import com.herolds.discreenkt.api.service.exception.DiscreenKTException;
 import com.herolds.discreenkt.gui.config.FxHelper;
 import com.herolds.discreenkt.gui.enums.SynchronizationInterval;
+import com.herolds.discreenkt.gui.scheduler.PosterDownloadScheduler;
 import com.herolds.discreenkt.gui.validators.PathValidator;
 import com.herolds.discreenkt.gui.validators.TimeValidator;
 import com.herolds.discreenkt.gui.validators.UserURLValidator;
@@ -112,26 +114,26 @@ public class Controller implements DiscreenKTListener {
 
 	private List<BooleanBinding> unmodifiedBindings;
 
-	public Controller() throws URISyntaxException {
+	public Controller() throws URISyntaxException, SchedulerException {
 		this.configPath = Controller.class.getClassLoader().getResource("config.properties").toURI();
 		this.unmodifiedBindings = new ArrayList<>();
-		
+
 		this.fxHelper = new FxHelper();
 		this.configProvider = ConfigProvider.initConfigProvider();		
 		this.discreenKTAPI = new DiscreenKTAPI(this);
 	}
 
 	@FXML
-	public void initialize() {
+	public void initialize() throws SchedulerException {
 		setLastSyncronization();
 
 		syncIntervalCombo.setItems(FXCollections.observableArrayList(SynchronizationInterval.values()));
-		
+
 		userTextField.setText(configProvider.getUserUrl())	;
 		posterPathTextField.setText(configProvider.getPosterDownloadFolder());
-		
+
 		setSyncInternalCombo();
-		
+
 		timeTextField.setText(configProvider.getSyncTime());
 
 		progressBar.setProgress(0);
@@ -147,7 +149,7 @@ public class Controller implements DiscreenKTListener {
 	}
 
 	@FXML
-	public void saveConfig(ActionEvent actionEvent) {
+	public void saveConfig(ActionEvent actionEvent) throws SchedulerException {
 		if (syncIntervalCombo.getValue() != null) {
 			configProvider.setSyncInterval(syncIntervalCombo.getValue().name());			
 		}
@@ -157,11 +159,12 @@ public class Controller implements DiscreenKTListener {
 
 		try {
 			configProvider.writeConfig(configPath);
-			
+
 			// Re-validate unmodified bindings 
 			// Otherwise "save" and "undo" button will remain enabled, 
 			// although the "form" is not dirty anymore...
 			unmodifiedBindings.forEach(BooleanBinding::invalidate);
+			PosterDownloadScheduler.getInstance().reschedule();
 		} catch (IOException e) {
 			logger.error("Cannot save config: ", e);
 			fxHelper.showExceptionDialog(e);
@@ -196,18 +199,18 @@ public class Controller implements DiscreenKTListener {
 		Thread th = new Thread(task);
 		th.setDaemon(true);
 		th.start();
-		
+
 		// startButton.setDisable(true);
 		stopButton.setDisable(false);
 	}
 
 	public void setup(Stage stage) {
 		this.stage = stage;
-		
+
 		this.stage.focusedProperty().addListener((ov, onHidden, onShown) -> setLastSyncronization());
-		
+
 		ChangeListener<? super Number> resizeScene = (obs, oldHeight, newHeight) -> this.stage.sizeToScene();
-		
+
 		synchronizationTitledPane.heightProperty().addListener(resizeScene);
 		activityTitledPane.heightProperty().addListener(resizeScene);
 		pathsTitledPane.heightProperty().addListener(resizeScene);
@@ -238,20 +241,20 @@ public class Controller implements DiscreenKTListener {
 	private void setupBindings() {		
 		final BooleanBinding posterPathInvalid = fxHelper.createValidationBinding(new PathValidator(), posterPathTextField.textProperty());
 		final BooleanBinding posterPathUnmodified = fxHelper.createEqualsBinding(configProvider.getPosterDownloadFolder(), posterPathTextField.textProperty());
-		
+
 		final BooleanBinding userInvalid = fxHelper.createValidationBinding(new UserURLValidator(), userTextField.textProperty());
 		final BooleanBinding userUnmodified = fxHelper.createEqualsBinding(configProvider.getUserUrl(), userTextField.textProperty());
-		
+
 		final BooleanBinding timeInvalid = fxHelper.createValidationBinding(new TimeValidator(), timeTextField.textProperty());
 		final BooleanBinding timeUnmodified = fxHelper.createEqualsBinding(configProvider.getSyncTime(), timeTextField.textProperty());
-		
+
 		final BooleanBinding syncComboUnmodified = Bindings.createBooleanBinding(()-> syncIntervalCombo.getValue().name() != null && syncIntervalCombo.getValue().name().equals(configProvider.getSyncInterval()), syncIntervalCombo.valueProperty());		
 
 		final BooleanBinding unmodifiedProperties = posterPathUnmodified
 				.and(userUnmodified)
 				.and(timeUnmodified)
 				.and(syncComboUnmodified);
-		
+
 		saveButton.disableProperty().bind(unmodifiedProperties.or(posterPathInvalid)
 				.or(userInvalid)
 				.or(timeInvalid));
@@ -311,7 +314,7 @@ public class Controller implements DiscreenKTListener {
 
 			setLastSyncronization();
 		});
-		
+
 		stopButton.setDisable(true);
 	}
 
@@ -319,7 +322,7 @@ public class Controller implements DiscreenKTListener {
 		Text txt = new Text();
 		txt.setText(text + "\n");
 		txt.setStyle(style);
-		
+
 		progressTextFlow.getChildren().add(txt);
 	}
 
@@ -358,7 +361,7 @@ public class Controller implements DiscreenKTListener {
 	public void stopDiscreenKT(ActionEvent event) throws DiscreenKTException {
 
 	}
-	
+
 	private void setSyncInternalCombo() {
 		Optional<SynchronizationInterval> enumValue = SynchronizationInterval.getEnumValue(configProvider.getSyncInterval());		
 		if (enumValue.isPresent()) {

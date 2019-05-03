@@ -1,4 +1,4 @@
-package com.herolds.discreenkt.gui.job;
+package com.herolds.discreenkt.gui.scheduler.job;
 
 import java.net.URISyntaxException;
 

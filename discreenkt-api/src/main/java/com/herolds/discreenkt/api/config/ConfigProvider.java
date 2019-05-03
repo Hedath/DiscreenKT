@@ -14,8 +14,6 @@ import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.herolds.discreenkt.api.service.MovieCache;
-
 /**
  * Singleton class for accessing application wide configurations.
  * Created by Benedek Herold on 2017.07.15.
@@ -89,8 +87,6 @@ public class ConfigProvider {
 		try (FileWriter writer = new FileWriter(file)) {
 			configProperties.store(writer, "DiscreenKT config properties");        	
 		}
-
-		MovieCache.reInitialize();
 	}
 
 	public Properties loadConfig(URI configFilePath) throws IOException {
