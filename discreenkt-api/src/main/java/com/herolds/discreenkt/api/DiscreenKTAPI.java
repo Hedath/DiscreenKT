@@ -31,7 +31,7 @@ public class DiscreenKTAPI implements DiscreenKTListener {
 
 	Logger logger = LoggerFactory.getLogger(DiscreenKTAPI.class);
 	
-    private final DiscreenKTListener listener;
+    private DiscreenKTListener listener;
     
     private final MoviePosterManager moviePosterManager;
 
@@ -57,6 +57,10 @@ public class DiscreenKTAPI implements DiscreenKTListener {
         }
         
         this.moviePosterManager = new MoviePosterManager(this);
+    }
+    
+    public void registerListener(DiscreenKTListener listener) {
+    	this.listener = listener;
     }
 
     public void startDownload() {

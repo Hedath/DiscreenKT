@@ -32,7 +32,7 @@ import com.herolds.discreenkt.api.listener.events.StartPosterDownloadsEvent;
 import com.herolds.discreenkt.api.service.exception.DiscreenKTException;
 import com.herolds.discreenkt.gui.config.FxHelper;
 import com.herolds.discreenkt.gui.enums.SynchronizationInterval;
-import com.herolds.discreenkt.gui.scheduler.PosterDownloadScheduler;
+import com.herolds.discreenkt.gui.scheduler.DownloadPostersScheduler;
 import com.herolds.discreenkt.gui.validators.PathValidator;
 import com.herolds.discreenkt.gui.validators.TimeValidator;
 import com.herolds.discreenkt.gui.validators.UserURLValidator;
@@ -121,6 +121,8 @@ public class Controller implements DiscreenKTListener {
 		this.fxHelper = new FxHelper();
 		this.configProvider = ConfigProvider.initConfigProvider();		
 		this.discreenKTAPI = new DiscreenKTAPI(this);
+		
+		DownloadPostersScheduler.getInstance().schedule(this);
 	}
 
 	@FXML
@@ -164,7 +166,7 @@ public class Controller implements DiscreenKTListener {
 			// Otherwise "save" and "undo" button will remain enabled, 
 			// although the "form" is not dirty anymore...
 			unmodifiedBindings.forEach(BooleanBinding::invalidate);
-			PosterDownloadScheduler.getInstance().reschedule();
+			DownloadPostersScheduler.getInstance().reschedule();
 		} catch (IOException e) {
 			logger.error("Cannot save config: ", e);
 			fxHelper.showExceptionDialog(e);

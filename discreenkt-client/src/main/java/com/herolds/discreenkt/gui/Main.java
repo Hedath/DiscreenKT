@@ -13,7 +13,7 @@ import org.slf4j.LoggerFactory;
 
 import com.herolds.discreenkt.api.service.DiscreenKTCache;
 import com.herolds.discreenkt.gui.controller.Controller;
-import com.herolds.discreenkt.gui.scheduler.PosterDownloadScheduler;
+import com.herolds.discreenkt.gui.scheduler.DownloadPostersScheduler;
 
 import javafx.application.Application;
 import javafx.application.Platform;
@@ -40,7 +40,7 @@ public class Main extends Application {
     // application stage is stored so that it can be shown and hidden based on system tray icon operations.
     private Stage stage;
     
-    private PosterDownloadScheduler scheduler;
+    private DownloadPostersScheduler scheduler;
 
     private TrayIcon trayIcon;
 
@@ -94,7 +94,7 @@ public class Main extends Application {
         stage.setResizable(false);
         stage.setScene(scene);
         
-        scheduler = PosterDownloadScheduler.getInstance();
+        scheduler = DownloadPostersScheduler.getInstance();
     }
     
     @Override

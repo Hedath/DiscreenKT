@@ -16,20 +16,21 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.herolds.discreenkt.api.config.ConfigProvider;
+import com.herolds.discreenkt.api.listener.DiscreenKTListener;
 import com.herolds.discreenkt.gui.enums.SynchronizationInterval;
 import com.herolds.discreenkt.gui.scheduler.job.DownloadPostersJob;
 
-public class PosterDownloadScheduler {
+public class DownloadPostersScheduler {
 
-	private final Logger logger = LoggerFactory.getLogger(PosterDownloadScheduler.class);
+	private final Logger logger = LoggerFactory.getLogger(DownloadPostersScheduler.class);
 	
-	private static PosterDownloadScheduler instance;
+	private static DownloadPostersScheduler instance;
 
 	private Scheduler scheduler;
 	
 	private ConfigProvider configProvider;
 	
-	private PosterDownloadScheduler() throws SchedulerException {
+	private DownloadPostersScheduler() throws SchedulerException {
 		this.configProvider = ConfigProvider.getInstance();
 		this.scheduler = StdSchedulerFactory.getDefaultScheduler();
 		
@@ -42,11 +43,9 @@ public class PosterDownloadScheduler {
     	scheduler.start();
     	
     	logger.info("Started scheduler. Registered job: {}", DownloadPostersJob.class.getName());
-    	
-    	schedule();
 	}
 	
-	public void schedule() {
+	public void schedule(DiscreenKTListener listener) {
 		Optional<SynchronizationInterval> syncInterval = SynchronizationInterval.getEnumValue(configProvider.getSyncInterval());
 
 		if (syncInterval.isPresent() && !SynchronizationInterval.NONE.equals(syncInterval.get())) {
@@ -59,6 +58,7 @@ public class PosterDownloadScheduler {
 					.build();
 			
 			try {
+				scheduler.getContext().put("listener", listener);
 				logger.info("Scheduling job: {} Interval: {} Time: {}", DownloadPostersJob.class.getName(), syncInterval.get(), configProvider.getSyncTime());
 				scheduler.scheduleJob(trigger);
 				logger.info("Scheduled job: {} Next fire: {}", DownloadPostersJob.class.getName(), trigger.getNextFireTime());
@@ -94,9 +94,9 @@ public class PosterDownloadScheduler {
 		}
 	}
 	
-	public static PosterDownloadScheduler getInstance() throws SchedulerException {
+	public static DownloadPostersScheduler getInstance() throws SchedulerException {
 		if (instance == null) {
-			instance = new PosterDownloadScheduler();
+			instance = new DownloadPostersScheduler();
 		}
 		
 		return instance;

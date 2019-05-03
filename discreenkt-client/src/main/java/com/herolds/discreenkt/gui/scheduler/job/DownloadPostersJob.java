@@ -5,6 +5,7 @@ import java.net.URISyntaxException;
 import org.quartz.Job;
 import org.quartz.JobExecutionContext;
 import org.quartz.JobExecutionException;
+import org.quartz.SchedulerException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -27,6 +28,13 @@ public class DownloadPostersJob extends DefaultListener implements Job, Discreen
 
 	@Override
 	public void execute(JobExecutionContext context) throws JobExecutionException {
+		try {
+			DiscreenKTListener listener = (DiscreenKTListener) context.getScheduler().getContext().get("listener");
+			discreenKTAPI.registerListener(listener);
+		} catch (SchedulerException e) {
+			logger.error("Could not register listener for job: ", e);
+		}
+		
 		discreenKTAPI.startDownload();
 	}
 
