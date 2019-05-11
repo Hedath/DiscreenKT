@@ -31,7 +31,6 @@ import com.herolds.discreenkt.api.listener.events.PageParseEvent;
 import com.herolds.discreenkt.api.listener.events.PosterDownloadEvent;
 import com.herolds.discreenkt.api.listener.events.StartEvent;
 import com.herolds.discreenkt.api.listener.events.StartPosterDownloadsEvent;
-import com.herolds.discreenkt.api.service.exception.DiscreenKTException;
 import com.herolds.discreenkt.gui.Main;
 import com.herolds.discreenkt.gui.config.FxHelper;
 import com.herolds.discreenkt.gui.enums.SynchronizationInterval;
@@ -218,9 +217,6 @@ public class Controller implements DiscreenKTListener {
 		Thread th = new Thread(task);
 		th.setDaemon(true);
 		th.start();
-
-		// startButton.setDisable(true);
-		stopButton.setDisable(false);
 	}
 
 	public void setup(Stage stage) {
@@ -333,8 +329,6 @@ public class Controller implements DiscreenKTListener {
 
 			setLastSyncronization();
 		});
-
-		stopButton.setDisable(true);
 	}
 
 	private void appendToTextFlow(String text, String style) {
@@ -374,11 +368,6 @@ public class Controller implements DiscreenKTListener {
 		Platform.runLater(() -> {
 			appendToTextFlow("Started poster downloads!", fxHelper.fillColor("ORANGE"));
 		});
-	}
-
-	@FXML 
-	public void stopDiscreenKT(ActionEvent event) throws DiscreenKTException {
-
 	}
 
 	private void setSyncInternalCombo() {

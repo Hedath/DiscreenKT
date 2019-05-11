@@ -112,13 +112,12 @@
 				</tooltip>
 			</Button>
 			
-			<Button fx:id="stopButton" text="Stop" disable="true"
-				onAction="#stopDiscreenKT">
+			<Button fx:id="stopButton" text="Stop" disable="true">
 				<graphic>
 					<Glyph fontFamily="FontAwesome" icon="stop" />
 				</graphic>
 				<tooltip>
-					<Tooltip text="Stop downloading posters" />
+					<Tooltip text="Please purchase 'STOP' DLC." />
 				</tooltip>
 			</Button>
 
@@ -127,7 +126,7 @@
 					<Glyph fontFamily="FontAwesome" icon="trash" />
 				</graphic>
 				<tooltip>
-					<Tooltip text="Please purchase RESET DLC." />
+					<Tooltip text="Please purchase 'RESET' DLC." />
 				</tooltip>
 			</Button>
 		</HBox>
