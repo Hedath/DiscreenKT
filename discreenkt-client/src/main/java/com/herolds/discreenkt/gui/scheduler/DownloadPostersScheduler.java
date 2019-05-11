@@ -25,13 +25,18 @@ import com.herolds.discreenkt.gui.scheduler.job.DownloadPostersJob;
 public class DownloadPostersScheduler {
 
 	private final Logger logger = LoggerFactory.getLogger(DownloadPostersScheduler.class);
-
-	@Inject
+	
 	private ConfigProvider configProvider;
 	
 	private Scheduler scheduler;
 	
-	public DownloadPostersScheduler() {
+	@Inject
+	public DownloadPostersScheduler(ConfigProvider configProvider) {
+		this.configProvider = configProvider;
+		initialize();
+	}
+
+	private void initialize() {
 		try {
 			this.scheduler = StdSchedulerFactory.getDefaultScheduler();
 			JobDetail job = JobBuilder.newJob(DownloadPostersJob.class)

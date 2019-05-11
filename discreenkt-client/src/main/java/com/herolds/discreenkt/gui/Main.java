@@ -6,6 +6,7 @@ import java.io.InputStream;
 import java.net.URL;
 
 import javax.imageio.ImageIO;
+import javax.inject.Inject;
 
 import org.quartz.SchedulerException;
 import org.slf4j.Logger;
@@ -31,7 +32,15 @@ import javafx.stage.Stage;
  */
 public class Main extends Application {
 	
-	Logger logger = LoggerFactory.getLogger(Main.class);
+	private final Logger logger = LoggerFactory.getLogger(Main.class);
+
+	public static DiscreenKTComponent injector;
+	
+	@Inject
+	protected DownloadPostersScheduler scheduler;
+	
+	@Inject
+	protected DiscreenKTCache discreenKTCache;
 	
     // one icon location is shared between the application tray icon and task bar icon.
     // you could also use multiple icons to allow for clean display of tray icons on hi-dpi devices.
@@ -39,8 +48,6 @@ public class Main extends Application {
 
     // application stage is stored so that it can be shown and hidden based on system tray icon operations.
     private Stage stage;
-    
-    private DownloadPostersScheduler scheduler;
 
     private TrayIcon trayIcon;
 
@@ -49,7 +56,9 @@ public class Main extends Application {
     // interacts with the tray icon.
     @Override 
     public void start(final Stage stage) throws IOException, SchedulerException {
-        // stores a reference to the stage.
+    	Main.injector.inject(this);
+    	
+    	// stores a reference to the stage.
         this.stage = stage;
         
         Thread.currentThread().setUncaughtExceptionHandler((thread, throwable) -> {
@@ -91,8 +100,6 @@ public class Main extends Application {
 
         stage.setResizable(false);
         stage.setScene(scene);
-        
-        scheduler = DownloadPostersScheduler.getInstance();
     }
     
     @Override
@@ -173,7 +180,7 @@ public class Main extends Application {
             exitItem.addActionListener(event -> {
                 Platform.exit();
                 tray.remove(trayIcon);
-                DiscreenKTCache.getInstance().close();
+                discreenKTCache.close();
                 System.exit(0);
             });
 
@@ -208,7 +215,7 @@ public class Main extends Application {
     }
 
     public static void main(String[] args) throws IOException, java.awt.AWTException {
-    	
+    	injector = DaggerDiscreenKTComponent.builder().build();
     	// Just launches the JavaFX application.
         // Due to way the application is coded, the application will remain running
         // until the user selects the Exit menu option from the tray icon.

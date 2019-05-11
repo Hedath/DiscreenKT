@@ -61,7 +61,6 @@ public class DiscreenKTAPI {
             
             List<Movie> movies = new ArrayList<>();
             
-
         	listener.onStart(StartEvent.builder()
             		.numberOfPages(maxPage)
             		.build());

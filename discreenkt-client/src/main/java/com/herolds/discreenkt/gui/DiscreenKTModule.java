@@ -14,8 +14,8 @@ public class DiscreenKTModule {
 	
 	@Provides
 	@Singleton
-	public DownloadPostersScheduler provideDownloadPostersScheduler() {
-		return new DownloadPostersScheduler();
+	public DownloadPostersScheduler provideDownloadPostersScheduler(ConfigProvider configProvider) {
+		return new DownloadPostersScheduler(configProvider);
 	}
 	
 	@Provides
@@ -23,10 +23,4 @@ public class DiscreenKTModule {
 	public FxHelper provideFxHelper() {
 		return new FxHelper();
 	}
-	
-	@Provides
-	@Singleton
-	public ConfigProvider provideConfigProvider() {
-		return new ConfigProvider();
-	} 
 }

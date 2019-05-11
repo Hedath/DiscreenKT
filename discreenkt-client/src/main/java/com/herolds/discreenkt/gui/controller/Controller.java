@@ -32,6 +32,7 @@ import com.herolds.discreenkt.api.listener.events.PosterDownloadEvent;
 import com.herolds.discreenkt.api.listener.events.StartEvent;
 import com.herolds.discreenkt.api.listener.events.StartPosterDownloadsEvent;
 import com.herolds.discreenkt.api.service.exception.DiscreenKTException;
+import com.herolds.discreenkt.gui.Main;
 import com.herolds.discreenkt.gui.config.FxHelper;
 import com.herolds.discreenkt.gui.enums.SynchronizationInterval;
 import com.herolds.discreenkt.gui.scheduler.DownloadPostersScheduler;
@@ -64,16 +65,25 @@ public class Controller implements DiscreenKTListener {
 	private final Logger logger = LoggerFactory.getLogger(Controller.class);
 
 	@Inject
-	private final ConfigProvider configProvider;
+	protected ConfigProvider configProvider;
 	
 	@Inject
-	private final DiscreenKTAPI discreenKTAPI;
+	protected DiscreenKTAPI discreenKTAPI;
 	
 	@Inject
-	private FxHelper fxHelper;
+	protected FxHelper fxHelper;
 	
 	@Inject
-	private DownloadPostersScheduler scheduler;
+	protected DownloadPostersScheduler scheduler;
+	
+	@Inject
+	protected PathValidator pathValidator;
+	
+	@Inject
+	protected TimeValidator timeValidator;
+	
+	@Inject
+	protected UserURLValidator userURLValidator;
 	
 	@FXML 
 	public TextField userTextField;
@@ -120,18 +130,16 @@ public class Controller implements DiscreenKTListener {
 
 	private Stage stage;
 
-
 	private List<BooleanBinding> unmodifiedBindings;
 
 	public Controller() throws URISyntaxException, SchedulerException {
+		Main.injector.inject(this);
+		
 		this.configPath = Controller.class.getClassLoader().getResource("config.properties").toURI();
 		this.unmodifiedBindings = new ArrayList<>();
-
-		this.fxHelper = new FxHelper();
-		this.configProvider = ConfigProvider.initConfigProvider();		
-		this.discreenKTAPI = new DiscreenKTAPI(this);
 		
 		scheduler.schedule(this);
+		discreenKTAPI.setListener(this);
 	}
 
 	@FXML
@@ -175,7 +183,7 @@ public class Controller implements DiscreenKTListener {
 			// Otherwise "save" and "undo" button will remain enabled, 
 			// although the "form" is not dirty anymore...
 			unmodifiedBindings.forEach(BooleanBinding::invalidate);
-			DownloadPostersScheduler.getInstance().reschedule();
+			scheduler.reschedule();
 		} catch (IOException e) {
 			logger.error("Cannot save config: ", e);
 			fxHelper.showExceptionDialog(e);
@@ -241,22 +249,22 @@ public class Controller implements DiscreenKTListener {
 	private void setupValidations() {
 		ValidationSupport support = new ValidationSupport();
 
-		support.registerValidator(posterPathTextField, true, new PathValidator());
-		support.registerValidator(userTextField, true, new UserURLValidator());
-		support.registerValidator(timeTextField, true, new TimeValidator());
+		support.registerValidator(posterPathTextField, true, pathValidator);
+		support.registerValidator(userTextField, true, userURLValidator);
+		support.registerValidator(timeTextField, true, timeValidator);
 
 		support.setErrorDecorationEnabled(true);
 		support.redecorate();
 	}
 
 	private void setupBindings() {		
-		final BooleanBinding posterPathInvalid = fxHelper.createValidationBinding(new PathValidator(), posterPathTextField.textProperty());
+		final BooleanBinding posterPathInvalid = fxHelper.createValidationBinding(pathValidator, posterPathTextField.textProperty());
 		final BooleanBinding posterPathUnmodified = fxHelper.createEqualsBinding(configProvider.getPosterDownloadFolder(), posterPathTextField.textProperty());
 
-		final BooleanBinding userInvalid = fxHelper.createValidationBinding(new UserURLValidator(), userTextField.textProperty());
+		final BooleanBinding userInvalid = fxHelper.createValidationBinding(userURLValidator, userTextField.textProperty());
 		final BooleanBinding userUnmodified = fxHelper.createEqualsBinding(configProvider.getUserUrl(), userTextField.textProperty());
 
-		final BooleanBinding timeInvalid = fxHelper.createValidationBinding(new TimeValidator(), timeTextField.textProperty());
+		final BooleanBinding timeInvalid = fxHelper.createValidationBinding(timeValidator, timeTextField.textProperty());
 		final BooleanBinding timeUnmodified = fxHelper.createEqualsBinding(configProvider.getSyncTime(), timeTextField.textProperty());
 
 		final BooleanBinding syncComboUnmodified = Bindings.createBooleanBinding(()-> syncIntervalCombo.getValue().name() != null && syncIntervalCombo.getValue().name().equals(configProvider.getSyncInterval()), syncIntervalCombo.valueProperty());		
