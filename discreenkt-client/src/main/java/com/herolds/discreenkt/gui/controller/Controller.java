@@ -1,8 +1,6 @@
 package com.herolds.discreenkt.gui.controller;
 
 import java.io.File;
-import java.io.IOException;
-import java.net.URI;
 import java.net.URISyntaxException;
 import java.text.DecimalFormat;
 import java.time.Instant;
@@ -123,8 +121,6 @@ public class Controller implements DiscreenKTListener {
 	@FXML 
 	public TextField timeTextField;
 
-	private final URI configPath;
-	
 	private int maxMovieCount;
 
 	private Stage stage;
@@ -134,7 +130,6 @@ public class Controller implements DiscreenKTListener {
 	public Controller() throws URISyntaxException, SchedulerException {
 		Main.injector.inject(this);
 		
-		this.configPath = Controller.class.getClassLoader().getResource("config.properties").toURI();
 		this.unmodifiedBindings = new ArrayList<>();
 		
 		scheduler.schedule(this);
@@ -175,28 +170,18 @@ public class Controller implements DiscreenKTListener {
 		configProvider.setPosterDownloadFolder(posterPathTextField.getText());
 		configProvider.setUserUrl(userTextField.getText());		
 
-		try {
-			configProvider.writeConfig(configPath);
+		configProvider.saveConfig();
 
-			// Re-validate unmodified bindings 
-			// Otherwise "save" and "undo" button will remain enabled, 
-			// although the "form" is not dirty anymore...
-			unmodifiedBindings.forEach(BooleanBinding::invalidate);
-			scheduler.reschedule();
-		} catch (IOException e) {
-			logger.error("Cannot save config: ", e);
-			fxHelper.showExceptionDialog(e);
-		}
+		// Re-validate unmodified bindings 
+		// Otherwise "save" and "undo" button will remain enabled, 
+		// although the "form" is not dirty anymore...
+		unmodifiedBindings.forEach(BooleanBinding::invalidate);
+		scheduler.reschedule();
 	}
 
 	@FXML
 	public void undoConfig(ActionEvent actionEvent) {
-		try {
-			configProvider.loadConfig(configPath);
-		} catch (IOException e) {
-			logger.error("Cannot load config: ", e);
-			fxHelper.showExceptionDialog(e);
-		}
+		configProvider.loadConfig();		
 
 		posterPathTextField.setText(configProvider.getPosterDownloadFolder());
 		userTextField.setText(configProvider.getUserUrl());

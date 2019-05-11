@@ -5,7 +5,8 @@ import java.io.FileInputStream;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.io.InputStream;
-import java.net.URI;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.text.MessageFormat;
 import java.util.Properties;
@@ -36,23 +37,13 @@ public class ConfigProvider {
 	private Properties configProperties;
 
 	private String defaultCacheFolder;
+	
+	private String appFolderPath;
 
 	public ConfigProvider() {
-		Properties config = new Properties();
-
-		InputStream configAsStream = ConfigProvider.class.getClassLoader().getResourceAsStream(CONFIG_PROPERTIES_FILE);
-
-		try {
-			if (configAsStream != null) {
-				config.load(configAsStream);				
-			}
-		} catch (IOException e) {
-			logger.error("Error occured during config load: ", e);
-			throw new RuntimeException(e);
-		}
-		
-		this.configProperties = config;
-		this.defaultCacheFolder = getTempFolderPath();
+		this.appFolderPath = getAppFolderPath();
+		this.configProperties = loadConfig();		
+		this.defaultCacheFolder = getCacheFolderPath();
 	}
 	
 	public void configure(String configFilePath) {		
@@ -64,25 +55,44 @@ public class ConfigProvider {
 		}
 		
 		this.configProperties = config;
-		this.defaultCacheFolder = getTempFolderPath();
+		this.defaultCacheFolder = getCacheFolderPath();
 	}
 
-	public void writeConfig(URI configFilePath) throws IOException {
-		File file = Paths.get(configFilePath).toFile();
-
-		try (FileWriter writer = new FileWriter(file)) {
-			configProperties.store(writer, "DiscreenKT config properties");        	
+	public void saveConfig() {
+		try (FileWriter writer = new FileWriter(new File(getConfigFilePath()))) {
+			configProperties.store(writer, "DiscreenKT config properties");
+			logger.info("Wrote config to: {}", getConfigFilePath());
+		} catch (IOException e) {
+			logger.error("Could not write config to path", e);
 		}
 	}
 
-	public Properties loadConfig(URI configFilePath) throws IOException {
-		Properties config = new Properties();
-
-		try(FileInputStream configFileStream = new FileInputStream(Paths.get(configFilePath).toFile())) {
-			config.load(configFileStream);
+	public Properties loadConfig() {
+		configProperties = new Properties();
+		
+		Path configFilePath = Paths.get(getConfigFilePath());
+		if (Files.exists(configFilePath)) {
+			try(FileInputStream configFileStream = new FileInputStream(configFilePath.toFile())) {
+				configProperties.load(configFileStream);
+			} catch (IOException e) {
+				e.printStackTrace();
+			}
+		} else {
+			// Read default config
+			InputStream configAsStream = ConfigProvider.class.getClassLoader().getResourceAsStream(CONFIG_PROPERTIES_FILE);
+			try {
+				if (configAsStream != null) {
+					configProperties.load(configAsStream);
+					// Write the default config to file
+					saveConfig();
+				}
+			} catch (IOException e) {
+				logger.error("Error occured during config load: ", e);
+				throw new RuntimeException(e);
+			}			
 		}
-
-		return  config;
+		
+		return configProperties;
 	}
 
 	public String getMovieListUrlPattern() {
@@ -151,8 +161,12 @@ public class ConfigProvider {
 		return configProperties.getProperty(key);
 	}
 	
-	private String getTempFolderPath() {
-		String cacheLocation = "DiscreenKT" + File.separator + "cache";
+	private String getAppFolderPath() {
+		if (appFolderPath != null) {
+			return appFolderPath;
+		}
+		
+		String appFolderLocation = "DiscreenKT";
     	
     	try {
 			File tempFile = File.createTempFile("discreenkt", ".tmp");
@@ -160,15 +174,24 @@ public class ConfigProvider {
 			String tempFileAbsolutePath = tempFile.getAbsolutePath();
     		String tempFolderPath = tempFileAbsolutePath.substring(0, tempFileAbsolutePath.lastIndexOf(File.separator));
     		
-    		cacheLocation = tempFolderPath.concat(File.separator).concat(cacheLocation);
+    		appFolderLocation = tempFolderPath.concat(File.separator).concat(appFolderLocation);
     		
     		tempFile.delete();
 		} catch (IOException | SecurityException e) {
-			logger.error("Failed to get temp folder: ", e);
-			
-			cacheLocation = new File(cacheLocation).getAbsolutePath();
+			logger.error("Failed to get temp folder for app: ", e);
+			appFolderLocation = new File(appFolderLocation).getAbsolutePath();
 		}
     	
-    	return cacheLocation;
+    	logger.info("App folder: {}", appFolderLocation);
+    	
+    	return appFolderLocation;
+	}
+	
+	private String getCacheFolderPath() {
+		return getAppFolderPath() + File.separator + "cache";
+	}
+	
+	private String getConfigFilePath() {
+		return getAppFolderPath() + File.separator + CONFIG_PROPERTIES_FILE;
 	}
 }
