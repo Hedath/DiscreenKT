@@ -20,6 +20,8 @@ import org.slf4j.LoggerFactory;
  */
 public class ConfigProvider {
 
+	private static final Logger logger = LoggerFactory.getLogger(ConfigProvider.class);
+
 	private static final String MOVIE_LIST_URL_PATTERN_KEY = "movie_list_pattern_url";
 	private static final String USER_URL_KEY = "user_url";
 	private static final String MOVIEDB_API_KEY = "moviedb_api_key";
@@ -31,54 +33,38 @@ public class ConfigProvider {
 
 	private static final String CONFIG_PROPERTIES_FILE = "config.properties";
 
-	private static final Logger logger = LoggerFactory.getLogger(ConfigProvider.class);
+	private Properties configProperties;
 
-	private static ConfigProvider instance;
+	private String defaultCacheFolder;
 
-	private final Properties configProperties;
-	
-	private final String defaultCacheFolder;
-
-	private ConfigProvider(Properties configProperties) {
-		this.configProperties = configProperties;
-		this.defaultCacheFolder = getTempFolderPath();
-	}
-
-	public static ConfigProvider getInstance() {
-		return instance;
-	}
-
-	public static ConfigProvider initConfigProvider(String configFilePath) throws IOException {
-		Properties config = new Properties();
-		try(FileInputStream configFileStream = new FileInputStream(configFilePath)) {
-			config.load(configFileStream);
-		}
-
-		instance = new ConfigProvider(config);
-
-		return instance;
-	}
-
-	public static ConfigProvider initConfigProvider() {
+	public ConfigProvider() {
 		Properties config = new Properties();
 
 		InputStream configAsStream = ConfigProvider.class.getClassLoader().getResourceAsStream(CONFIG_PROPERTIES_FILE);
 
 		try {
-			config.load(configAsStream);
+			if (configAsStream != null) {
+				config.load(configAsStream);				
+			}
 		} catch (IOException e) {
 			logger.error("Error occured during config load: ", e);
 			throw new RuntimeException(e);
 		}
-
-		instance = new ConfigProvider(config);
-
-		return instance;
-
+		
+		this.configProperties = config;
+		this.defaultCacheFolder = getTempFolderPath();
 	}
-
-	public static void initConfigProvider(Properties config) {
-		instance = new ConfigProvider(config);
+	
+	public void configure(String configFilePath) {		
+		Properties config = new Properties();
+		try(FileInputStream configFileStream = new FileInputStream(configFilePath)) {
+			config.load(configFileStream);
+		} catch (Exception e) {
+			logger.error("Error during configuration: ", e);
+		}
+		
+		this.configProperties = config;
+		this.defaultCacheFolder = getTempFolderPath();
 	}
 
 	public void writeConfig(URI configFilePath) throws IOException {

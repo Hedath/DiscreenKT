@@ -2,6 +2,8 @@ package com.herolds.discreenkt.gui.scheduler;
 
 import java.util.Optional;
 
+import javax.inject.Inject;
+
 import org.quartz.CronScheduleBuilder;
 import org.quartz.DateBuilder;
 import org.quartz.JobBuilder;
@@ -23,26 +25,27 @@ import com.herolds.discreenkt.gui.scheduler.job.DownloadPostersJob;
 public class DownloadPostersScheduler {
 
 	private final Logger logger = LoggerFactory.getLogger(DownloadPostersScheduler.class);
-	
-	private static DownloadPostersScheduler instance;
 
-	private Scheduler scheduler;
-	
+	@Inject
 	private ConfigProvider configProvider;
 	
-	private DownloadPostersScheduler() throws SchedulerException {
-		this.configProvider = ConfigProvider.getInstance();
-		this.scheduler = StdSchedulerFactory.getDefaultScheduler();
-		
-		JobDetail job = JobBuilder.newJob(DownloadPostersJob.class)
-        	    .withIdentity("downloadPostersJob")
-        	    .storeDurably()
-        	    .build();
-		
-    	scheduler.addJob(job, false);    	
-    	scheduler.start();
-    	
-    	logger.info("Started scheduler. Registered job: {}", DownloadPostersJob.class.getName());
+	private Scheduler scheduler;
+	
+	public DownloadPostersScheduler() {
+		try {
+			this.scheduler = StdSchedulerFactory.getDefaultScheduler();
+			JobDetail job = JobBuilder.newJob(DownloadPostersJob.class)
+					.withIdentity("downloadPostersJob")
+					.storeDurably()
+					.build();
+			
+			scheduler.addJob(job, false);    	
+			scheduler.start();
+			logger.info("Started scheduler. Registered job: {}", DownloadPostersJob.class.getName());
+		} catch (SchedulerException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
 	}
 	
 	public void schedule(DiscreenKTListener listener) {
@@ -92,14 +95,6 @@ public class DownloadPostersScheduler {
 				logger.info("Unscheduled job: {}");
 			}
 		}
-	}
-	
-	public static DownloadPostersScheduler getInstance() throws SchedulerException {
-		if (instance == null) {
-			instance = new DownloadPostersScheduler();
-		}
-		
-		return instance;
 	}
 	
 	public void close() throws SchedulerException {

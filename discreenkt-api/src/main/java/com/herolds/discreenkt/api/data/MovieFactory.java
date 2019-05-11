@@ -8,9 +8,9 @@ import org.slf4j.LoggerFactory;
  */
 public class MovieFactory {
 
-	private static final Logger logger = LoggerFactory.getLogger(MovieFactory.class);
+	private final Logger logger = LoggerFactory.getLogger(MovieFactory.class);
 
-	public static Movie create(String title, String secondaryTitle, String link) {
+	public Movie create(String title, String secondaryTitle, String link) {
 		return Movie.builder()
 				.KTid(getKTid(link))
 				.year(getYear(link))
@@ -20,7 +20,7 @@ public class MovieFactory {
 				.build();
 	}
 
-	private static int getKTid(String movieLink) {
+	private int getKTid(String movieLink) {
 		movieLink = movieLink.replace("/film/", "");
 
 		int idEndIndex = movieLink.indexOf('/');
@@ -40,7 +40,7 @@ public class MovieFactory {
 		}
 	}
 
-	private static int getYear(String movieLink) {
+	private int getYear(String movieLink) {
 		int yearStartIndex = movieLink.lastIndexOf('-');
 
 		if (yearStartIndex == -1) {

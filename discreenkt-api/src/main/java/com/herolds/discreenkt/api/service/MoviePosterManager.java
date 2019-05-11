@@ -10,6 +10,8 @@ import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
+import javax.inject.Inject;
+
 import org.apache.http.client.HttpClient;
 import org.apache.http.impl.client.HttpClientBuilder;
 import org.slf4j.Logger;
@@ -17,6 +19,7 @@ import org.slf4j.LoggerFactory;
 
 import com.herolds.discreenkt.api.config.ConfigProvider;
 import com.herolds.discreenkt.api.data.Movie;
+import com.herolds.discreenkt.api.listener.DefaultListener;
 import com.herolds.discreenkt.api.listener.DiscreenKTListener;
 import com.herolds.discreenkt.api.listener.events.FinishEvent;
 import com.herolds.discreenkt.api.listener.events.PosterDownloadEvent;
@@ -39,24 +42,31 @@ public class MoviePosterManager {
 
 	private final Logger logger = LoggerFactory.getLogger(MoviePosterManager.class);
 	
-    private TmdbSearch tmdbSearch;
-    private DiscreenKTCache movieCache;
+	private ConfigProvider configProvider;
+	
+	private DiscreenKTCache movieCache;
+	
+	private TmdbSearch tmdbSearch;
 
-    private final DiscreenKTListener listener;
+    private DiscreenKTListener listener;
 
-    public MoviePosterManager(DiscreenKTListener listener) {
+    @Inject
+    public MoviePosterManager(ConfigProvider configProvider, DiscreenKTCache movieCache) {
+    	this.configProvider = configProvider;
+    	this.movieCache = movieCache;
+    	
+    	this.listener = new DefaultListener();
+	}
 
-        this.listener = listener;
+	public void setListener(DiscreenKTListener listener) {
+		this.listener = listener;
+	}
 
-        String apiKey = ConfigProvider.getInstance().getMovieDBApiKey();
-        HttpClient httpClient = HttpClientBuilder.create().build();
-        this.tmdbSearch = new TmdbSearch(apiKey, new HttpTools(httpClient));
-
-        movieCache = DiscreenKTCache.getInstance();
-    }
-
-    public void processMovieList(List<Movie> movies) throws DiscreenKTException {
-    	List<Movie> postersToDownload = movies.stream()
+	public void processMovieList(List<Movie> movies) throws DiscreenKTException {
+		HttpClient httpClient = HttpClientBuilder.create().build();
+        this.tmdbSearch = new TmdbSearch(configProvider.getMovieDBApiKey(), new HttpTools(httpClient));
+		
+		List<Movie> postersToDownload = movies.stream()
         	.filter(this::isPosterNeeded)
         	.collect(Collectors.toList());
     	
@@ -91,7 +101,6 @@ public class MoviePosterManager {
 
         if (movieInfo.isPresent() && movieInfo.get().getPosterPath() != null) {
         	logger.info("Downloaded movie poster: " + movie.getTitle());
-        	ConfigProvider configProvider = ConfigProvider.getInstance();
             String baseUrl = configProvider.getMovieDBPosterBaseUrl();
             String outputPath = configProvider.getPosterDownloadFolder();
 

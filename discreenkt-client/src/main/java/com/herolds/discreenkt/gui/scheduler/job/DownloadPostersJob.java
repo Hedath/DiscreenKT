@@ -30,7 +30,7 @@ public class DownloadPostersJob extends DefaultListener implements Job, Discreen
 	public void execute(JobExecutionContext context) throws JobExecutionException {
 		try {
 			DiscreenKTListener listener = (DiscreenKTListener) context.getScheduler().getContext().get("listener");
-			discreenKTAPI.registerListener(listener);
+			discreenKTAPI.setListener(listener);
 		} catch (SchedulerException e) {
 			logger.error("Could not register listener for job: ", e);
 		}

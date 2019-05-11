@@ -5,6 +5,8 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
+import javax.inject.Inject;
+
 import org.apache.commons.lang3.StringUtils;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
@@ -19,6 +21,13 @@ import com.herolds.discreenkt.api.data.MovieFactory;
  * Herold on 2017.07.15.
  */
 public class MovieListParser {
+	
+	private MovieFactory movieFactory;
+	
+	@Inject
+	public MovieListParser(MovieFactory movieFactory) {
+		this.movieFactory = movieFactory;
+	}
 	
 	public int getMaxPage(String movieListUrl) throws IOException {
 		Document document = Jsoup.connect(movieListUrl).get();
@@ -65,6 +74,6 @@ public class MovieListParser {
 			secondaryTitle = firstSpan.text();
 		}
 
-		return Optional.of(MovieFactory.create(title, secondaryTitle, movieLink));
+		return Optional.of(movieFactory.create(title, secondaryTitle, movieLink));
 	}
 }

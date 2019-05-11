@@ -3,6 +3,7 @@ package com.herolds.discreenkt.api.service;
 import java.time.Instant;
 import java.util.Optional;
 
+import javax.inject.Inject;
 import javax.xml.ws.Holder;
 
 import org.ehcache.Cache;
@@ -24,28 +25,24 @@ import com.herolds.discreenkt.api.data.Movie;
 public class DiscreenKTCache {
 
 	private final Logger logger = LoggerFactory.getLogger(DiscreenKTCache.class);
-	
-    private static DiscreenKTCache instance;
 
+	private ConfigProvider configProvider;
+	
     private PersistentCacheManager persistentCacheManager;
+    
     private Cache<Integer, Movie> cache;
     
     private Cache<Instant, Long> synchronizationCache;
-    
-    public static DiscreenKTCache getInstance() {
-        if (instance == null) {
-            instance = new DiscreenKTCache();
-        }
-        
-        return instance;
-    }
 
-    private DiscreenKTCache() {
+    @Inject
+    public DiscreenKTCache(ConfigProvider configProvider) {
+    	this.configProvider = configProvider;
+    	
         initEhCache();
     }
 
     private void initEhCache() {
-        String cacheLocation = ConfigProvider.getInstance().getMovieCacheFolder();
+        String cacheLocation = configProvider.getMovieCacheFolder();
         logger.info("Cache location: {}", cacheLocation);
 
         persistentCacheManager = CacheManagerBuilder.newCacheManagerBuilder()

@@ -12,15 +12,16 @@ import com.herolds.discreenkt.api.listener.events.StartPosterDownloadsEvent;
  */
 public interface DiscreenKTListener {
 
-    void onStart(StartEvent event);
+    default void onStart(StartEvent event) {}
     
-    void onPageParse(PageParseEvent event);
+    default void onPageParse(PageParseEvent event) {}
     
-    void onStartPosterDownloads(StartPosterDownloadsEvent event);
+    default void onStartPosterDownloads(StartPosterDownloadsEvent event) {}
     
-    void onPosterDownload(PosterDownloadEvent event);
+    default void onPosterDownload(PosterDownloadEvent event) {}
     
-    void onError(ErrorEvent event);
+    default void onError(ErrorEvent event) {}
     
-    void onFinish(FinishEvent event);
+    default void onFinish(FinishEvent event) {}
+   
 }

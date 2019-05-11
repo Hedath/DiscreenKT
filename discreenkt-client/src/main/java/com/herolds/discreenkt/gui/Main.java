@@ -76,9 +76,7 @@ public class Main extends Application {
         // create the layout for the javafx stage.
         BorderPane layout = new BorderPane(createContent());
 
-        layout.setStyle(
-                "-fx-background-color: rgba(255, 255, 255, 1);"
-        );
+        layout.setStyle("-fx-background-color: rgba(255, 255, 255, 1);");
 
         layout.setPrefSize(370, 100);
 
@@ -210,7 +208,8 @@ public class Main extends Application {
     }
 
     public static void main(String[] args) throws IOException, java.awt.AWTException {
-        // Just launches the JavaFX application.
+    	
+    	// Just launches the JavaFX application.
         // Due to way the application is coded, the application will remain running
         // until the user selects the Exit menu option from the tray icon.
         launch(args);

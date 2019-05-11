@@ -15,6 +15,8 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Optional;
 
+import javax.inject.Inject;
+
 import org.controlsfx.validation.ValidationSupport;
 import org.quartz.SchedulerException;
 import org.slf4j.Logger;
@@ -61,6 +63,18 @@ public class Controller implements DiscreenKTListener {
 
 	private final Logger logger = LoggerFactory.getLogger(Controller.class);
 
+	@Inject
+	private final ConfigProvider configProvider;
+	
+	@Inject
+	private final DiscreenKTAPI discreenKTAPI;
+	
+	@Inject
+	private FxHelper fxHelper;
+	
+	@Inject
+	private DownloadPostersScheduler scheduler;
+	
 	@FXML 
 	public TextField userTextField;
 	@FXML
@@ -101,16 +115,11 @@ public class Controller implements DiscreenKTListener {
 	public TextField timeTextField;
 
 	private final URI configPath;
-
-	private final ConfigProvider configProvider;
-
-	private final DiscreenKTAPI discreenKTAPI;
-
+	
 	private int maxMovieCount;
 
 	private Stage stage;
 
-	private FxHelper fxHelper;
 
 	private List<BooleanBinding> unmodifiedBindings;
 
@@ -122,7 +131,7 @@ public class Controller implements DiscreenKTListener {
 		this.configProvider = ConfigProvider.initConfigProvider();		
 		this.discreenKTAPI = new DiscreenKTAPI(this);
 		
-		DownloadPostersScheduler.getInstance().schedule(this);
+		scheduler.schedule(this);
 	}
 
 	@FXML
