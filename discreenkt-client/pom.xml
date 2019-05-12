@@ -17,7 +17,7 @@
 		<project.build.finalName>DiscreenKT-GUI</project.build.finalName>
 		<fully.qualified.main.class>com.herolds.discreenkt.gui.Main</fully.qualified.main.class>
 
-		<controlsfx.version>8.40.14</controlsfx.version>
+		<controlsfx.version>8.40.15</controlsfx.version>
 		<quartz.version>2.3.1</quartz.version>
 	</properties>
 
