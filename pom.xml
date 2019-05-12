@@ -16,6 +16,26 @@
 		<dagger.version>2.22.1</dagger.version>
 	</properties>
 
+	<repositories>
+		<repository>
+			<id>dev-azure-com-herolds-discreenkt</id>
+			<url>https://pkgs.dev.azure.com/herolds/_packaging/discreenkt/maven/v1</url>
+			<releases>
+				<enabled>true</enabled>
+			</releases>
+			<snapshots>
+				<enabled>true</enabled>
+			</snapshots>
+		</repository>
+	</repositories>
+
+	<distributionManagement>
+		<repository>
+			<id>dev-azure-com-herolds-discreenkt</id>
+			<url>https://pkgs.dev.azure.com/herolds/_packaging/discreenkt/maven/v1</url>
+		</repository>
+	</distributionManagement>
+
 	<dependencyManagement>
 		<dependencies>
 			<dependency>
