@@ -83,8 +83,6 @@ public class ConfigProvider {
 			try {
 				if (configAsStream != null) {
 					configProperties.load(configAsStream);
-					// Write the default config to file
-					saveConfig();
 				}
 			} catch (IOException e) {
 				logger.error("Error occured during config load: ", e);

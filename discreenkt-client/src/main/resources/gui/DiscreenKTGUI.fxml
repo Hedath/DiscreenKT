@@ -47,7 +47,11 @@
 					text="Posters" />
 				<TextField fx:id="posterPathTextField"
 					GridPane.columnIndex="1" GridPane.rowIndex="0"
-					GridPane.columnSpan="2" promptText="/path/to/posters/" />
+					GridPane.columnSpan="2" promptText="/path/to/posters/" disable="true">
+					<tooltip>
+						<Tooltip fx:id="posterPathTooltip"/>
+					</tooltip>	
+				</TextField>
 
 				<Button fx:id="posterPathButton" GridPane.columnIndex="3"
 					GridPane.rowIndex="0" onAction="#selectPosterPath">

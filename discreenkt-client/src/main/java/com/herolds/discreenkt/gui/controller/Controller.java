@@ -52,6 +52,7 @@ import javafx.scene.control.ProgressBar;
 import javafx.scene.control.TextArea;
 import javafx.scene.control.TextField;
 import javafx.scene.control.TitledPane;
+import javafx.scene.control.Tooltip;
 import javafx.scene.text.Text;
 import javafx.scene.text.TextFlow;
 import javafx.stage.DirectoryChooser;
@@ -120,12 +121,15 @@ public class Controller implements DiscreenKTListener {
 	public Button stopButton;
 	@FXML 
 	public TextField timeTextField;
+	@FXML 
+	public Tooltip posterPathTooltip;
 
 	private int maxMovieCount;
 
 	private Stage stage;
 
 	private List<BooleanBinding> unmodifiedBindings;
+
 
 	public Controller() throws URISyntaxException, SchedulerException {
 		Main.injector.inject(this);
@@ -144,6 +148,7 @@ public class Controller implements DiscreenKTListener {
 
 		userTextField.setText(configProvider.getUserUrl())	;
 		posterPathTextField.setText(configProvider.getPosterDownloadFolder());
+		posterPathTooltip.setText(configProvider.getPosterDownloadFolder());
 
 		setSyncInternalCombo();
 
@@ -159,6 +164,7 @@ public class Controller implements DiscreenKTListener {
 	public void selectPosterPath(ActionEvent actionEvent) {
 		this.selectPath(posterPathTextField, posterPathButton);
 		configProvider.setPosterDownloadFolder(posterPathTextField.getText());
+		posterPathTooltip.setText(configProvider.getPosterDownloadFolder());
 	}
 
 	@FXML

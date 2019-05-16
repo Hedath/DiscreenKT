@@ -14,11 +14,16 @@
 	<packaging>jar</packaging>
 
 	<properties>
-		<project.build.finalName>DiscreenKT-GUI</project.build.finalName>
+		<project.build.finalName>DiscreenKT</project.build.finalName>
 		<fully.qualified.main.class>com.herolds.discreenkt.gui.Main</fully.qualified.main.class>
 
 		<controlsfx.version>8.40.15</controlsfx.version>
 		<quartz.version>2.3.1</quartz.version>
+		<nsmenufx.version>2.1.6</nsmenufx.version>
+
+		<!-- Used for specifying base logFolder for the app. If you modify logFolder, 
+			always append '/' at the end -->
+		<logFolder></logFolder>
 	</properties>
 
 	<dependencies>
@@ -51,9 +56,22 @@
 			<artifactId>quartz</artifactId>
 			<version>${quartz.version}</version>
 		</dependency>
+		<dependency>
+			<groupId>de.codecentric.centerdevice</groupId>
+			<artifactId>centerdevice-nsmenufx</artifactId>
+			<version>${nsmenufx.version}</version>
+		</dependency>
 	</dependencies>
 
 	<build>
+		<!-- Filtering is needed to use property values in resource files (logback.xml for example -->
+		<resources>
+			<resource>
+				<directory>src/main/resources</directory>
+				<filtering>true</filtering>
+			</resource>
+		</resources>
+
 		<plugins>
 			<plugin>
 				<groupId>org.apache.maven.plugins</groupId>
@@ -61,20 +79,34 @@
 			</plugin>
 			<plugin>
 				<groupId>org.codehaus.mojo</groupId>
-				<artifactId>exec-maven-plugin</artifactId>
-				<version>1.1.1</version>
-				<executions>
-					<execution>
-					    <goals>
-					    	<goal>java</goal>
-				    	</goals>
-						<inherited>false</inherited>
-					</execution>
-				</executions>
-				<configuration>
-					<mainClass>${fully.qualified.main.class}</mainClass>
-				</configuration>
+				<artifactId>build-helper-maven-plugin</artifactId>
 			</plugin>
 		</plugins>
 	</build>
+
+	<profiles>
+		<profile>
+			<id>deployOSX</id>
+			<properties>
+				<logFolder>/tmp/DiscreenKT/</logFolder>
+			</properties>
+			<build>
+				<plugins>
+					<plugin>
+						<groupId>com.zenjava</groupId>
+						<artifactId>javafx-maven-plugin</artifactId>
+						<version>8.8.3</version>
+						<configuration>
+							<vendor>herolds</vendor>
+							<appName>${project.build.finalName}</appName>
+							<mainClass>${fully.qualified.main.class}</mainClass>
+							<bundleArguments>
+								<icon>${project.basedir}/deploy/osx/DiscreenKT.icns</icon>
+							</bundleArguments>
+						</configuration>
+					</plugin>
+				</plugins>
+			</build>
+		</profile>
+	</profiles>
 </project>

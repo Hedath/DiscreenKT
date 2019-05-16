@@ -1,10 +1,12 @@
 <configuration>
-	<appender name="FILE" class="ch.qos.logback.core.rolling.RollingFileAppender">
-		<file>discreenKT-fxApp.log</file>
+	<appender name="FILE"
+		class="ch.qos.logback.core.rolling.RollingFileAppender">
+		<file>${logFolder}discreenKT-fxApp.log</file>
 		<rollingPolicy
 			class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
 			<!-- daily rollover -->
-			<fileNamePattern>discreenKT-fxApp.%d{yyyy-MM-dd}.log</fileNamePattern>
+			<fileNamePattern>${logFolder}discreenKT-fxApp.%d{yyyy-MM-dd}.log
+			</fileNamePattern>
 			<maxHistory>30</maxHistory>
 			<totalSizeCap>3GB</totalSizeCap>
 		</rollingPolicy>

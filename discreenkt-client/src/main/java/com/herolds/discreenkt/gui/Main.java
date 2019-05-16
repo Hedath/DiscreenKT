@@ -16,6 +16,7 @@ import com.herolds.discreenkt.api.service.DiscreenKTCache;
 import com.herolds.discreenkt.gui.controller.Controller;
 import com.herolds.discreenkt.gui.scheduler.DownloadPostersScheduler;
 
+import de.codecentric.centerdevice.MenuToolkit;
 import javafx.application.Application;
 import javafx.application.Platform;
 import javafx.fxml.FXMLLoader;
@@ -24,6 +25,7 @@ import javafx.scene.Parent;
 import javafx.scene.Scene;
 import javafx.scene.control.Alert;
 import javafx.scene.control.Alert.AlertType;
+import javafx.scene.control.Menu;
 import javafx.scene.layout.BorderPane;
 import javafx.stage.Stage;
 
@@ -60,6 +62,8 @@ public class Main extends Application {
     	
     	// stores a reference to the stage.
         this.stage = stage;
+        
+        createMenu();
         
         Thread.currentThread().setUncaughtExceptionHandler((thread, throwable) -> {
             logger.error("Unexpected exception: ", throwable);
@@ -101,11 +105,33 @@ public class Main extends Application {
         stage.setResizable(false);
         stage.setScene(scene);
     }
+
+	private void createMenu() {
+		// Get the toolkit
+        MenuToolkit tk = MenuToolkit.toolkit();
+        
+        if (tk != null) {
+        	// Create the default Application menu
+        	Menu defaultApplicationMenu = tk.createDefaultApplicationMenu("DiscreenKT");
+        	
+        	// Update the existing Application menu
+        	tk.setApplicationMenu(defaultApplicationMenu);
+        	
+        	defaultApplicationMenu.getItems().forEach(menuItem -> {
+        		if (menuItem.getText() != null && menuItem.getText().toUpperCase().contains("QUIT")) {
+        			menuItem.setOnAction(action -> {
+        				Platform.exit();
+        				discreenKTCache.close();
+        				System.exit(0);
+        			});
+        		}
+        	});
+        }
+	}
     
     @Override
     public void stop() throws Exception {
     	super.stop();
-
 		scheduler.close();    		
     }
 
