@@ -98,7 +98,7 @@
 						<version>8.8.3</version>
 						<configuration>
 							<vendor>herolds</vendor>
-							<appName>${project.build.finalName}</appName>
+							<appName>DiscreenKT</appName>
 							<mainClass>${fully.qualified.main.class}</mainClass>
 							<bundleArguments>
 								<icon>${project.basedir}/deploy/osx/DiscreenKT.icns</icon>
