@@ -101,7 +101,6 @@
 							<appName>${project.build.finalName}</appName>
 							<mainClass>${fully.qualified.main.class}</mainClass>
 							<bundleArguments>
-								<runtime>deploy/jdk</runtime>
 								<icon>${project.basedir}/deploy/osx/DiscreenKT.icns</icon>
 							</bundleArguments>
 						</configuration>
